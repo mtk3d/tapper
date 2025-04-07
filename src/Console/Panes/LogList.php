@@ -13,25 +13,24 @@ use Tapper\Console\CommandAttributes\KeyPressed;
 use Tapper\Console\CommandAttributes\OnEvent;
 use Tapper\Console\Component;
 use Tapper\Console\Components\LogItem;
+use Tapper\Console\Support\CursorController;
+use Tapper\Console\Support\VirtualListManager;
 
 class LogList extends Pane
 {
-    private int $offset = 0;
-
-    private int $maxItems = 0;
-
-    private int $count = 0;
-
-    private int $cursor = 0;
-
     private array $logs = [];
-
     private array $listItems = [];
 
-    public function init(): void {}
+    private int $maxItems = 0;
+    private int $count = 0;
+
+    private CursorController $cursor;
+    private VirtualListManager $list;
 
     public function mount(): void
     {
+        $this->cursor = new CursorController(0, 0);
+        $this->list = new VirtualListManager($this->container, LogItem::class, $this->listItems);
 
         $this->state->onChange('logs', fn ($data) => $this->updateLogs($data));
     }
@@ -40,50 +39,48 @@ class LogList extends Pane
     {
         $this->logs = $data;
         $this->count = count($data);
+        $this->cursor->count = $this->count;
+
         $this->updateVisible();
     }
 
     #[OnEvent('resize')]
     public function updateVisible(): void
     {
-        $visible = min($this->maxItems, $this->count);
-        $existing = count($this->listItems);
+        $this->cursor->maxItems = $this->maxItems;
 
-        if ($visible > $existing) {
-            for ($i = $existing; $i < $visible; $i++) {
-                $this->listItems[] = $this->container->make(LogItem::class);
-            }
-        }
-
+        $this->list->ensureVisible(min($this->maxItems, $this->count));
         $this->fill();
     }
 
     public function fill(): void
     {
-        $visibleLogs = array_slice($this->logs, $this->offset, $this->maxItems);
-
-        foreach ($this->listItems as $i => $component) {
-            $log = $visibleLogs[$i] ?? null;
-
-            if ($log !== null) {
-                $component->setData($log);
-            }
-        }
-
-        $this->updateSelection();
+        $this->list->fill($this->logs, $this->cursor->offset, $this->cursor->cursor);
     }
 
-    private function updateSelection(): void
+    #[KeyPressed(KeyCode::Up)]
+    #[KeyPressed('k')]
+    public function up(): void
     {
-        foreach ($this->listItems as $i => $component) {
-            $logIndex = $this->offset + $i;
+        $this->state->set('follow_log', false);
+        $this->cursor->moveUp();
+        $this->fill();
+    }
 
-            if ($logIndex === $this->cursor) {
-                $component->select();
-            } else {
-                $component->deselect();
-            }
-        }
+    #[KeyPressed(KeyCode::Down)]
+    #[KeyPressed('j')]
+    public function down(): void
+    {
+        $this->state->set('follow_log', false);
+        $this->cursor->moveDown();
+        $this->fill();
+    }
+
+    #[KeyPressed(' ')]
+    public function select(): void
+    {
+        $this->state->set('details_index', $this->cursor->cursor);
+        $this->eventBus->emit('log_details', ['index' => $this->cursor->cursor]);
     }
 
     #[KeyPressed(KeyCode::Esc)]
@@ -92,79 +89,26 @@ class LogList extends Pane
         $this->state->set('follow_log', true);
     }
 
-    #[KeyPressed(KeyCode::Up)]
-    #[KeyPressed('k')]
-    public function up(): void
-    {
-        if ($this->cursor > 0) {
-            $this->state->set('follow_log', false);
-            $this->cursor--;
-            $this->fill();
-
-            return;
-        }
-
-        if ($this->offset > 0) {
-            $this->state->set('follow_log', false);
-            $this->offset--;
-            $this->fill();
-        }
-    }
-
-    #[KeyPressed(KeyCode::Down)]
-    #[KeyPressed('j')]
-    public function down(): void
-    {
-        $maxOffset = $this->count - $this->maxItems;
-        $maxOffset = $maxOffset < 0 ? 0 : $maxOffset;
-
-        if ($this->cursor < $this->count - 1 && $this->cursor < $this->maxItems - 1) {
-            $this->state->set('follow_log', false);
-            $this->cursor++;
-            $this->fill();
-
-            return;
-        }
-
-        if ($this->offset < $maxOffset) {
-            $this->state->set('follow_log', false);
-            $this->offset++;
-            $this->fill();
-        }
-
-        if ($this->offset === $maxOffset) {
-            $this->state->set('follow_log', true);
-        }
-    }
-
-    #[KeyPressed(' ')]
-    public function select(): void
-    {
-        $this->state->set('details_index', $this->cursor);
-        $this->eventBus->emit('log_details', ['index' => $this->cursor]);
-    }
-
     public function render(Area $area): Widget
     {
         $this->maxItems = floor($area->height / 3);
 
         if ($this->state->get('follow_log', true)) {
-            $this->offset = max(0, $this->count - $this->maxItems);
-            $this->cursor = min($this->count, $this->maxItems) - 1;
+            $this->cursor->follow();
         }
 
-        return
-            BlockWidget::default()
-                ->widget(
-                    GridWidget::default()
-                        ->direction(Direction::Vertical)
-                        ->constraints(...array_fill(0, $this->maxItems, Constraint::length(3)))
-                        ->widgets(
-                            ...array_map(
-                                fn (Component $item): Widget => $item->render($area),
-                                $this->listItems,
-                            ),
-                        ),
-                );
+        return BlockWidget::default()
+            ->widget(
+                GridWidget::default()
+                    ->direction(Direction::Vertical)
+                    ->constraints(...array_fill(0, $this->maxItems, Constraint::length(3)))
+                    ->widgets(
+                        ...array_map(
+                            fn (Component $item): Widget => $item->render($area),
+                            $this->listItems
+                        )
+                    )
+            );
     }
 }
+
