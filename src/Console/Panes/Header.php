@@ -20,7 +20,7 @@ class Header extends Pane
 
     public function mount(): void {}
 
-    #[Periodic(0.5)]
+    #[Periodic(0.8)]
     public function blink(): void
     {
         $this->show = ! $this->show;
@@ -41,7 +41,7 @@ class Header extends Pane
                     ParagraphWidget::fromSpans(
                         Span::fromString('Tapper v0.1 | port: 2137 |'),
                         Span::fromString(' '),
-                        Span::fromString($follow ? '▶' : ($this->show ? '⏸' : ' ')),
+                        Span::fromString($follow ? ($this->show ? '●' : ' ') : '⏸'),
                         Span::fromString(' '),
                         Span::fromString($follow ? 'LIVE' : 'PAUSED'),
                     ),

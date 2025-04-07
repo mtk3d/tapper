@@ -87,6 +87,7 @@ class LogList extends Pane
     public function exitUserNav(): void
     {
         $this->state->set('follow_log', true);
+        $this->fill();
     }
 
     public function render(Area $area): Widget
