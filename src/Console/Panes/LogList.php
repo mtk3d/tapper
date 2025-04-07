@@ -27,9 +27,19 @@ class LogList extends Pane
 
     private int $cursor = 0;
 
+    private array $logs = [];
+
     public function init(): void {}
 
-    public function mount(): void {}
+    public function mount(): void
+    {
+        $this->state->onChange('logs', fn ($data) => $this->updateLogs($data));
+    }
+
+    public function updateLogs(array $data): void
+    {
+        $this->logs = $data;
+    }
 
     #[KeyPressed(KeyCode::Esc)]
     public function exitUserNav(): void
@@ -85,7 +95,7 @@ class LogList extends Pane
 
     public function render(Area $area): Widget
     {
-        $logs = $this->state->get('logs', []);
+        $logs = $this->logs;
 
         $this->maxItems = floor($area->height / 3);
         $this->count = count($logs);
