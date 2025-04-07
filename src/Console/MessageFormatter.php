@@ -27,6 +27,7 @@ class MessageFormatter
 
         $lines = [];
         self::encodeFormattedLines($data, 0, $lines);
+
         return $lines;
     }
 
@@ -80,13 +81,13 @@ class MessageFormatter
 
         if (is_array($data)) {
             $isList = array_is_list($data);
-            $lines[] = Line::fromSpan(Span::fromString($pad . ($isList ? '[' : '{')));
+            $lines[] = Line::fromSpan(Span::fromString($pad.($isList ? '[' : '{')));
 
             $i = 0;
             foreach ($data as $key => $value) {
-                $lineSpans = [Span::fromString($pad . '  ')];
+                $lineSpans = [Span::fromString($pad.'  ')];
 
-                if (!$isList) {
+                if (! $isList) {
                     $lineSpans[] = Span::fromString('"');
                     $lineSpans[] = Span::styled($key, Style::default()->blue());
                     $lineSpans[] = Span::fromString('": ');
@@ -103,7 +104,7 @@ class MessageFormatter
                 $i++;
             }
 
-            $lines[] = Line::fromSpan(Span::fromString($pad . ($isList ? ']' : '}')));
+            $lines[] = Line::fromSpan(Span::fromString($pad.($isList ? ']' : '}')));
         } else {
             $lines[] = new Line(self::encodeInlineSpans($data));
         }

@@ -2,20 +2,17 @@
 
 namespace Tapper\Console\Panes;
 
-use DateTime;
 use PhpTui\Term\KeyCode;
 use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
-use PhpTui\Tui\Extension\Core\Widget\ParagraphWidget;
 use PhpTui\Tui\Layout\Constraint;
-use PhpTui\Tui\Style\Style;
-use PhpTui\Tui\Text\Line;
-use PhpTui\Tui\Text\Span;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
 use Tapper\Console\CommandAttributes\KeyPressed;
-use Tapper\Console\MessageFormatter;
+use Tapper\Console\CommandAttributes\OnEvent;
+use Tapper\Console\Component;
+use Tapper\Console\Components\LogItem;
 
 class LogList extends Pane
 {
@@ -29,16 +26,64 @@ class LogList extends Pane
 
     private array $logs = [];
 
+    private array $listItems = [];
+
     public function init(): void {}
 
     public function mount(): void
     {
+
         $this->state->onChange('logs', fn ($data) => $this->updateLogs($data));
     }
 
     public function updateLogs(array $data): void
     {
         $this->logs = $data;
+        $this->count = count($data);
+        $this->updateVisible();
+    }
+
+    #[OnEvent('resize')]
+    public function updateVisible(): void
+    {
+        $visible = min($this->maxItems, $this->count);
+        $existing = count($this->listItems);
+
+        if ($visible > $existing) {
+            for ($i = $existing; $i < $visible; $i++) {
+                $this->listItems[] = $this->container->make(LogItem::class);
+            }
+        }
+
+        $this->fill();
+    }
+
+    public function fill(): void
+    {
+        $visibleLogs = array_slice($this->logs, $this->offset, $this->maxItems);
+
+        foreach ($this->listItems as $i => $component) {
+            $log = $visibleLogs[$i] ?? null;
+
+            if ($log !== null) {
+                $component->setData($log);
+            }
+        }
+
+        $this->updateSelection();
+    }
+
+    private function updateSelection(): void
+    {
+        foreach ($this->listItems as $i => $component) {
+            $logIndex = $this->offset + $i;
+
+            if ($logIndex === $this->cursor) {
+                $component->select();
+            } else {
+                $component->deselect();
+            }
+        }
     }
 
     #[KeyPressed(KeyCode::Esc)]
@@ -54,12 +99,15 @@ class LogList extends Pane
         if ($this->cursor > 0) {
             $this->state->set('follow_log', false);
             $this->cursor--;
+            $this->fill();
+
             return;
         }
 
         if ($this->offset > 0) {
             $this->state->set('follow_log', false);
             $this->offset--;
+            $this->fill();
         }
     }
 
@@ -73,12 +121,15 @@ class LogList extends Pane
         if ($this->cursor < $this->count - 1 && $this->cursor < $this->maxItems - 1) {
             $this->state->set('follow_log', false);
             $this->cursor++;
+            $this->fill();
+
             return;
         }
 
         if ($this->offset < $maxOffset) {
             $this->state->set('follow_log', false);
             $this->offset++;
+            $this->fill();
         }
 
         if ($this->offset === $maxOffset) {
@@ -95,52 +146,11 @@ class LogList extends Pane
 
     public function render(Area $area): Widget
     {
-        $logs = $this->logs;
-
         $this->maxItems = floor($area->height / 3);
-        $this->count = count($logs);
 
         if ($this->state->get('follow_log', true)) {
             $this->offset = max(0, $this->count - $this->maxItems);
             $this->cursor = min($this->count, $this->maxItems) - 1;
-        }
-
-        $logsWindow = array_slice($logs, $this->offset, $this->maxItems);
-
-        $logsWidgets = [];
-
-        foreach ($logsWindow as $index => $log) {
-            [$microtime, $message, $trace] = array_values($log);
-
-            $dt = DateTime::createFromFormat('U.u', sprintf('%.6f', $microtime));
-            $date = $dt->format('Y-m-d');
-            $time = $dt->format('H:i:s.u');
-
-            $selected = $this->cursor === $index;
-
-            $marker = $selected ? '█ ' : '  ';
-
-            $darkGray = Style::default()->darkGray();
-
-            $logsWidgets[] = BlockWidget::default()
-                ->widget(
-                    GridWidget::default()
-                        ->direction(Direction::Horizontal)
-                        ->constraints(
-                            Constraint::length(20),
-                            Constraint::length($area->width - 20),
-                        )->widgets(
-                            ParagraphWidget::fromLines(
-                                Line::fromSpans(Span::styled($marker, $darkGray), Span::styled("$time", Style::default()->blue())),
-                                Line::fromSpans(Span::styled($marker, $darkGray), Span::styled("$date", $darkGray)),
-                            ),
-                            ParagraphWidget::fromLines(
-                                json_validate($message) ? Line::fromSpans(...MessageFormatter::colorizeInlineJson($message)) : Line::fromSpan(Span::fromString("$message")),
-                                Line::fromSpan(Span::styled("↪ $trace", $darkGray)),
-                            ),
-                        ),
-                );
-
         }
 
         return
@@ -149,7 +159,12 @@ class LogList extends Pane
                     GridWidget::default()
                         ->direction(Direction::Vertical)
                         ->constraints(...array_fill(0, $this->maxItems, Constraint::length(3)))
-                        ->widgets(...$logsWidgets)
+                        ->widgets(
+                            ...array_map(
+                                fn (Component $item): Widget => $item->render($area),
+                                $this->listItems,
+                            ),
+                        ),
                 );
     }
 }

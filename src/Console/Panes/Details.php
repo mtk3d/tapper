@@ -26,7 +26,6 @@ class Details extends Pane
         $datetime = DateTime::createFromFormat('U.u', sprintf('%.6f', $log['microtime']));
         $formatted = $datetime->format('Y-m-d H:i:s.u');
 
-
         return BlockWidget::default()
             ->widget(
                 ParagraphWidget::fromLines(

@@ -5,6 +5,7 @@ namespace Tapper\Console;
 class State
 {
     private array $state = [];
+
     private array $listeners = [];
 
     public function set(string $key, mixed $value): void
@@ -62,7 +63,7 @@ class State
 
     private function callListeners(string $key): void
     {
-        if (!array_key_exists($key, $this->listeners)) {
+        if (! array_key_exists($key, $this->listeners)) {
             return;
         }
 

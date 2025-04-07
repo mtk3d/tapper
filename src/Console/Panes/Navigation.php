@@ -38,7 +38,7 @@ class Navigation extends Pane
                 ->borderType(BorderType::Plain)
                 ->borderStyle($this->isActive ? Style::default()->white() : Style::default()->gray())
                 ->widget(
-                    //ParagraphWidget::fromString('[SPACE] details   [ESC] back   [ENTER] continue   [↑/↓] navigation   [q] quit'),
+                    // ParagraphWidget::fromString('[SPACE] details   [ESC] back   [ENTER] continue   [↑/↓] navigation   [q] quit'),
                     ParagraphWidget::fromSpans(
                         Span::fromString('Details: '),
                         Span::styled('space', $buttonStyle),
