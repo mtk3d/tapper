@@ -11,6 +11,7 @@ use PhpTui\Term\EventParser;
 use PhpTui\Term\KeyCode;
 use PhpTui\Term\MouseEventKind;
 use PhpTui\Term\Terminal;
+use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Display\Display;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\CompositeWidget;
@@ -29,6 +30,8 @@ class Application
     private EventParser $eventParser;
 
     private bool $typingMode = false;
+
+    private ?Area $previousArea = null;
 
     public function __construct(
         private LoopInterface $loop,
@@ -75,6 +78,12 @@ class Application
     {
         $this->loop->addPeriodicTimer(1 / 60, function () {
             $area = $this->display->viewportArea();
+            if ($area != $this->previousArea) {
+                $this->eventBus->emit('resize');
+            }
+
+            $this->previousArea = $area;
+
             $this->display->draw(
                 CompositeWidget::fromWidgets(
                     $this->window->render($area),

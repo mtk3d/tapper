@@ -9,6 +9,7 @@ use React\EventLoop\LoopInterface;
 use ReflectionObject;
 use Tapper\Console\CommandAttributes\KeyPressed;
 use Tapper\Console\CommandAttributes\Mouse;
+use Tapper\Console\CommandAttributes\OnEvent;
 use Tapper\Console\CommandAttributes\Periodic;
 use Tapper\Console\Commands\Command;
 
@@ -40,6 +41,7 @@ abstract class Component
             $attributes = [
                 ...$method->getAttributes(KeyPressed::class),
                 ...$method->getAttributes(Mouse::class),
+                ...$method->getAttributes(OnEvent::class),
             ];
 
             foreach ($attributes as $attribute) {
