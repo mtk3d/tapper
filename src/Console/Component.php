@@ -12,6 +12,7 @@ use Tapper\Console\CommandAttributes\Mouse;
 use Tapper\Console\CommandAttributes\OnEvent;
 use Tapper\Console\CommandAttributes\Periodic;
 use Tapper\Console\Commands\Command;
+use Tapper\Console\State\AppState;
 
 abstract class Component
 {
@@ -26,9 +27,9 @@ abstract class Component
     public function __construct(
         protected readonly LoopInterface $loop,
         protected readonly EventBus $eventBus,
-        protected readonly State $state,
         protected readonly CommandInvoker $commandInvoker,
         protected readonly Container $container,
+        protected readonly AppState $appState,
     ) {
         if (method_exists($this, 'init')) {
             $this->container->call([$this, 'init']);

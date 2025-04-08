@@ -8,7 +8,7 @@
             "Tapper\\": "src/"
         },
         "files": [
-            "src/Runtime/helpers.php"
+            "src/helpers.php"
         ]
     },
     "authors": [

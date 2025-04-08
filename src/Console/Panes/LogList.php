@@ -13,33 +13,34 @@ use Tapper\Console\CommandAttributes\KeyPressed;
 use Tapper\Console\CommandAttributes\OnEvent;
 use Tapper\Console\Component;
 use Tapper\Console\Components\LogItem;
-use Tapper\Console\Support\CursorController;
 use Tapper\Console\Support\VirtualListManager;
 
 class LogList extends Pane
 {
     private array $logs = [];
+
     private array $listItems = [];
 
     private int $maxItems = 0;
+
     private int $count = 0;
 
-    private CursorController $cursor;
     private VirtualListManager $list;
 
     public function mount(): void
     {
-        $this->cursor = new CursorController(0, 0);
         $this->list = new VirtualListManager($this->container, LogItem::class, $this->listItems);
 
-        $this->state->onChange('logs', fn ($data) => $this->updateLogs($data));
+        $this->appState->observe('logs', fn (array $logs): null => $this->updateLogs($logs));
+        $this->appState->observe('cursor', function (int $cursor): void {
+            $this->appState->live = $cursor >= $this->count - 1;
+        });
     }
 
     public function updateLogs(array $data): void
     {
         $this->logs = $data;
         $this->count = count($data);
-        $this->cursor->count = $this->count;
 
         $this->updateVisible();
     }
@@ -47,56 +48,95 @@ class LogList extends Pane
     #[OnEvent('resize')]
     public function updateVisible(): void
     {
-        $this->cursor->maxItems = $this->maxItems;
+        if ($this->area) {
+            $this->maxItems = floor($this->area->height / 3);
+        }
+
+        if ($this->appState->live) {
+            $this->scrollToBottom();
+        }
 
         $this->list->ensureVisible(min($this->maxItems, $this->count));
+
         $this->fill();
     }
 
     public function fill(): void
     {
-        $this->list->fill($this->logs, $this->cursor->offset, $this->cursor->cursor);
+        $this->list->fill($this->logs, $this->appState->offset);
     }
 
     #[KeyPressed(KeyCode::Up)]
     #[KeyPressed('k')]
     public function up(): void
     {
-        $this->state->set('follow_log', false);
-        $this->cursor->moveUp();
-        $this->fill();
+        if ($this->appState->cursor > 0) {
+            $this->appState->cursor--;
+        }
+
+        if ($this->appState->cursor < $this->appState->offset) {
+            $this->offsetUp();
+        }
+    }
+
+    public function offsetUp(): void
+    {
+        if ($this->appState->offset > 0) {
+            $this->appState->offset--;
+            $this->fill();
+        }
     }
 
     #[KeyPressed(KeyCode::Down)]
     #[KeyPressed('j')]
     public function down(): void
     {
-        $this->state->set('follow_log', false);
-        $this->cursor->moveDown();
-        $this->fill();
+        if ($this->appState->cursor < $this->count - 1) {
+            $this->appState->cursor++;
+        }
+
+        if ($this->appState->cursor > $this->maxItems - 1) {
+            $this->offsetDown();
+        }
+    }
+
+    public function offsetDown(): void
+    {
+        if ($this->appState->offset < $this->count - $this->maxItems) {
+            $this->appState->offset++;
+            $this->fill();
+        }
     }
 
     #[KeyPressed(' ')]
     public function select(): void
     {
-        $this->state->set('details_index', $this->cursor->cursor);
-        $this->eventBus->emit('log_details', ['index' => $this->cursor->cursor]);
+        $this->appState->previewLog = $this->appState->logs()[$this->appState->cursor];
     }
 
     #[KeyPressed(KeyCode::Esc)]
     public function exitUserNav(): void
     {
-        $this->state->set('follow_log', true);
+        $this->scrollToBottom();
         $this->fill();
+    }
+
+    private function scrollToBottom(): void
+    {
+        $newOffset = $this->count - $this->maxItems;
+
+        if ($newOffset > 0) {
+            $this->appState->offset = $newOffset;
+        }
+
+        $this->appState->cursor = $this->count - 1;
     }
 
     public function render(Area $area): Widget
     {
-        $this->maxItems = floor($area->height / 3);
+        $this->area = $area;
 
-        if ($this->state->get('follow_log', true)) {
-            $this->cursor->follow();
-        }
+        $this->maxItems = floor($area->height / 3);
 
         return BlockWidget::default()
             ->widget(
@@ -112,4 +152,3 @@ class LogList extends Pane
             );
     }
 }
-

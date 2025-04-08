@@ -29,7 +29,7 @@ class VirtualListManager
         }
     }
 
-    public function fill(array $logs, int $offset, int $cursor): void
+    public function fill(array $logs, int $offset): void
     {
         foreach ($this->listItems as $i => $component) {
             $logIndex = $offset + $i;
@@ -37,12 +37,6 @@ class VirtualListManager
 
             if ($log !== null) {
                 $component->setData($log);
-
-                if ($logIndex === $cursor) {
-                    $component->select();
-                } else {
-                    $component->deselect();
-                }
             }
         }
     }

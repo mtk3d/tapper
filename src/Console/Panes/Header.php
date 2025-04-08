@@ -30,7 +30,7 @@ class Header extends Pane
     {
         $this->area = $area;
 
-        $follow = $this->state->get('follow_log', true);
+        $live = $this->appState->live;
 
         return
             BlockWidget::default()
@@ -39,11 +39,11 @@ class Header extends Pane
                 ->borderStyle($this->isActive ? Style::default()->white() : Style::default()->gray())
                 ->widget(
                     ParagraphWidget::fromSpans(
-                        Span::fromString('Tapper v0.1 | port: 2137 |'),
+                        Span::fromString(sprintf('Tapper %s | port: %s |', $this->appState->version, $this->appState->port)),
                         Span::fromString(' '),
-                        Span::fromString($follow ? ($this->show ? '●' : ' ') : '⏸'),
+                        Span::fromString($live ? ($this->show ? '●' : ' ') : '⏸'),
                         Span::fromString(' '),
-                        Span::fromString($follow ? 'LIVE' : 'PAUSED'),
+                        Span::fromString($live ? 'LIVE' : 'PAUSED'),
                     ),
                 );
     }

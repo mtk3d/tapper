@@ -17,6 +17,7 @@ use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\CompositeWidget;
 use React\EventLoop\LoopInterface;
 use React\Stream\ReadableResourceStream;
+use Tapper\Console\State\AppState;
 use Tapper\Console\Windows\Main;
 use Tapper\Console\Windows\Popup;
 use Tapper\Console\Windows\Window;
@@ -39,14 +40,15 @@ class Application
         private Display $display,
         private EventBus $eventBus,
         private CommandInvoker $commandInvoker,
-        private State $state,
         private Container $container,
+        private AppState $appState,
     ) {
         $this->eventParser = new EventParser;
     }
 
     public function run(): int
     {
+        $this->appState->version = 'v0.1.1';
         $this->terminal->execute(Actions::alternateScreenEnable());
         $this->terminal->execute(Actions::cursorHide());
         $this->terminal->execute(Actions::enableMouseCapture());
@@ -95,7 +97,7 @@ class Application
 
     public function startInputHandling(): void
     {
-        $this->eventBus->listen('typing_mode', fn (array $data) => $this->typingMode = $data['state']);
+        $this->appState->observe('typingMode', fn (bool $typingMode) => $this->typingMode = $typingMode);
 
         $stdin = new ReadableResourceStream(STDIN, $this->loop);
         $stdin->on('data', function ($data) {
@@ -106,7 +108,7 @@ class Application
                 if (in_array($event::class, [CharKeyEvent::class, CodedKeyEvent::class, MouseEvent::class])) {
                     if ($event instanceof MouseEvent && $this->typingMode) {
                         if ($event->kind === MouseEventKind::Down) {
-                            $this->eventBus->emit('typing_mode', ['state' => false]);
+                            $this->appState->typingMode = false;
                         } else {
                             continue;
                         }
@@ -119,7 +121,7 @@ class Application
                     }
 
                     if ($this->typingMode && $event->code === KeyCode::Esc) {
-                        $this->eventBus->emit('typing_mode', ['state' => false]);
+                        $this->appState->typingMode = false;
 
                         return;
                     }

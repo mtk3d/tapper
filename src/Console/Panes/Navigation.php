@@ -11,19 +11,12 @@ use PhpTui\Tui\Text\Span;
 use PhpTui\Tui\Widget\Borders;
 use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Widget;
-use Tapper\Console\CommandAttributes\KeyPressed;
 
 class Navigation extends Pane
 {
     public function init(): void {}
 
     public function mount(): void {}
-
-    #[KeyPressed(KeyCode::Enter, true)]
-    public function continue(): void
-    {
-        $this->state->set('continue', true);
-    }
 
     public function render(Area $area): Widget
     {

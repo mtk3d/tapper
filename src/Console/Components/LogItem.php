@@ -17,39 +17,32 @@ use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
 use Tapper\Console\Component;
 use Tapper\Console\MessageFormatter;
+use Tapper\Console\State\LogItem as LogItemState;
 
 class LogItem extends Component
 {
-    private bool $selected = false;
+    private ?LogItemState $log = null;
 
-    private array $log = [];
-
-    public function select(): void
+    public function setData(LogItemState $log): void
     {
-        $this->selected = true;
-    }
-
-    public function deselect(): void
-    {
-        $this->selected = false;
-    }
-
-    public function setData(array $data): void
-    {
-        $this->log = $data;
+        $this->log = $log;
     }
 
     public function render(Area $area): Widget
     {
-        [$microtime, $message, $trace] = array_values($this->log);
+        if (! $this->log) {
+            return BlockWidget::default();
+        }
 
-        $dt = DateTime::createFromFormat('U.u', sprintf('%.6f', $microtime));
+        $dt = DateTime::createFromFormat('U.u', sprintf('%.6f', $this->log->timestamp));
         $date = $dt->format('Y-m-d');
         $time = $dt->format('H:i:s.u');
 
-        $marker = $this->selected ? '█ ' : '  ';
+        $marker = $this->appState->cursor === $this->log->id ? '█ ' : '  ';
 
         $darkGray = Style::default()->darkGray();
+
+        $message = $this->log->message;
 
         return BlockWidget::default()
             ->widget(
@@ -65,7 +58,7 @@ class LogItem extends Component
                         ),
                         ParagraphWidget::fromLines(
                             json_validate($message) ? Line::fromSpans(...MessageFormatter::colorizeInlineJson($message)) : Line::fromSpan(Span::fromString("$message")),
-                            Line::fromSpan(Span::styled("↪ $trace", $darkGray)),
+                            Line::fromSpan(Span::styled(sprintf('↪ %s', $this->log->caller), $darkGray)),
                         ),
                     ),
             );
