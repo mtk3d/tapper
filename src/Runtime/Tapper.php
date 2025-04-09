@@ -47,8 +47,8 @@ class Tapper
 
     private function collectDebugInfo(): void
     {
-        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-        $caller = $trace[1] ?? null;
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
+        $caller = $trace[2] ?? null;
         $this->caller = $caller
             ? sprintf('%s:%s', basename($caller['file']), $caller['line'])
             : 'faled to get caller';
