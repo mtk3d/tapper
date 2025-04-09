@@ -6,6 +6,16 @@ namespace Tapper\Console\State;
 
 use RuntimeException;
 
+/**
+ * @property string $version
+ * @property int $port
+ * @property bool $live
+ * @property bool $typingMode
+ * @property int $cursor
+ * @property int $offset
+ * @property ?LogItem $previewLog
+ * @property array $logs
+ */
 class AppState
 {
     private array $observers = [];

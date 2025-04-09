@@ -24,33 +24,43 @@ class Navigation extends Pane
         $buttonStyle = Style::default();
         $delimiter = Span::fromString(' | ');
 
+        $instruction = [];
+
+        if (!$this->appState->live && ! $this->appState->previewLog) {
+            $instruction[] = Span::fromString('Live: ');
+            $instruction[] = Span::styled('esc', $buttonStyle);
+            $instruction[] = $delimiter;
+        }
+
+        if ($this->appState->previewLog) {
+            $instruction[] = Span::fromString('Back: ');
+            $instruction[] = Span::styled('esc', $buttonStyle);
+            $instruction[] = $delimiter;
+        } else {
+            $instruction[] = Span::fromString('Details: ');
+            $instruction[] = Span::styled('space', $buttonStyle);
+            $instruction[] = $delimiter;
+
+        }
+
+        $instruction[] = Span::fromString('Continue: ');
+        $instruction[] = Span::styled('enter', $buttonStyle);
+        $instruction[] = $delimiter;
+
+        $instruction[] = Span::fromString('Navigation: ');
+        $instruction[] = Span::styled('↑/↓', $buttonStyle);
+        $instruction[] = $delimiter;
+
+        $instruction[] = Span::fromString('Quit: ');
+        $instruction[] = Span::styled('q', $buttonStyle);
+
         return
             BlockWidget::default()
                 ->borders(Borders::TOP)
                 ->borderType(BorderType::Plain)
                 ->borderStyle($this->isActive ? Style::default()->white() : Style::default()->gray())
                 ->widget(
-                    // ParagraphWidget::fromString('[SPACE] details   [ESC] back   [ENTER] continue   [↑/↓] navigation   [q] quit'),
-                    ParagraphWidget::fromSpans(
-                        Span::fromString('Details: '),
-                        Span::styled('space', $buttonStyle),
-                        $delimiter,
-
-                        Span::fromString('Back: '),
-                        Span::styled('esc', $buttonStyle),
-                        $delimiter,
-
-                        Span::fromString('Continue: '),
-                        Span::styled('enter', $buttonStyle),
-                        $delimiter,
-
-                        Span::fromString('Navigation: '),
-                        Span::styled('↑/↓', $buttonStyle),
-                        $delimiter,
-
-                        Span::fromString('Quit: '),
-                        Span::styled('q', $buttonStyle),
-                    )->style(Style::default()->blue()),
+                    ParagraphWidget::fromSpans(...$instruction)->style(Style::default()->blue()),
                 );
     }
 }
