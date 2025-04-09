@@ -1,8 +1,5 @@
 <?php
 
-use function Tapper\tp;
-use function Tapper\tpp;
-
 require __DIR__.'/../vendor/autoload.php';
 
 $jobs = [
@@ -17,6 +14,6 @@ tp('Show some jsons');
 
 tp($jobs[1]);
 
-tpp('Wait for debugger');
+tp('Wait for debugger')->wait();
 
 tp($jobs[2]);

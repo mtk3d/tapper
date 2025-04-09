@@ -8,9 +8,7 @@ use PhpTui\Tui\Widget\Widget;
 
 class Popup extends Window
 {
-    public function init(): void
-    {
-    }
+    public function init(): void {}
 
     public function render(Area $area): Widget
     {

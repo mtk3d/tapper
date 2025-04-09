@@ -9,40 +9,71 @@ class Tapper
 {
     private static ?JsonRpcClient $client = null;
 
+    private string $caller;
+
+    private mixed $message;
+
+    private float $microtime;
+
+    private string $type = 'log';
+
     public function __construct()
     {
         if (self::$client === null) {
             self::$client = new JsonRpcClient;
         }
+
+        $this->collectDebugInfo();
     }
 
-    public function tap($value, string $label = 'debug'): void
+    public function tap(mixed $message): self
+    {
+        $this->message = $message;
+
+        return $this;
+    }
+
+    public function wait(): self
+    {
+        $this->type = 'wait';
+
+        return $this;
+    }
+
+    public function __destruct()
+    {
+        $this->send();
+    }
+
+    private function collectDebugInfo(): void
     {
         $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
         $caller = $trace[1] ?? null;
-        $trace = basename($caller['file']).':'.$caller['line'];
+        $this->caller = $caller
+            ? sprintf('%s:%s', basename($caller['file']), $caller['line'])
+            : 'faled to get caller';
 
-        $request = new JsonRpcRequest('log', ['message' => $value, 'trace' => $trace, 'microtime' => microtime(true)]);
-        $response = self::$client->call($request);
-
-        if (! isset($response['result']) || $response['result'] !== 'ok') {
-            error_log('[Tapper] tap failed or no response from server.');
-            exit;
-        }
-
+        $this->microtime = microtime(true);
     }
 
-    public function tapPause(string $message = 'paused...'): void
+    private function send(): void
     {
-        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
-        $caller = $trace[1] ?? null;
-        $trace = basename($caller['file']).':'.$caller['line'];
+        $payload = [
+            'message' => $this->message,
+            'caller' => $this->caller,
+            'microtime' => $this->microtime,
+        ];
 
-        $request = new JsonRpcRequest('pause', ['message' => $message, 'trace' => $trace, 'microtime' => microtime(true)]);
+        $request = new JsonRpcRequest(
+            $this->type,
+            $payload,
+        );
+
         $response = self::$client->call($request);
+        $result = $response['result'] ?? null;
 
-        if (! isset($response['result']) || $response['result'] !== 'continue') {
-            error_log('[Tapper] pause failed or no response from server.');
+        if (! in_array($result, ['ok', 'continue'])) {
+            error_log('[Tapper] server not responding.');
             exit;
         }
     }

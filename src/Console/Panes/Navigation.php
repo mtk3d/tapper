@@ -2,7 +2,6 @@
 
 namespace Tapper\Console\Panes;
 
-use PhpTui\Term\KeyCode;
 use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\ParagraphWidget;

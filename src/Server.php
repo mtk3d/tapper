@@ -22,7 +22,7 @@ class Server
             $decoder = new Decoder($conn, true);
             $encoder = new Encoder($conn, true);
 
-            $decoder->on('data', function ($message) use ($encoder, $appState, $eventBus) {
+            $decoder->on('data', function ($message) use ($conn, $encoder, $appState, $eventBus) {
 
                 if (($message['jsonrpc'] ?? '') !== '2.0') {
                     $encoder->write([
@@ -47,7 +47,7 @@ class Server
                             self::$id,
                             $params['microtime'],
                             json_encode($params['message'], JSON_UNESCAPED_UNICODE),
-                            $params['trace'],
+                            $params['caller'],
                         ));
 
                         $encoder->write([
@@ -59,13 +59,15 @@ class Server
                         self::$id++;
                         break;
 
-                    case 'pause':
+                    case 'wait':
                         $appState->appendLog(new LogItem(
                             self::$id,
                             $params['microtime'],
                             "⏸ {$params['message']} — press ENTER to continue",
-                            $params['trace'],
+                            $params['caller'],
                         ));
+
+                        self::$id++;
 
                         $eventBus->listen(KeyCode::Enter, fn () => ($encoder->write([
                             'jsonrpc' => '2.0',
@@ -73,7 +75,6 @@ class Server
                             'id' => $id,
                         ])
                         ));
-                        self::$id++;
 
                         break;
 
