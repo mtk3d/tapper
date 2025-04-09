@@ -13,7 +13,7 @@ abstract class Pane extends Component
 
     public function register(): void {}
 
-    #[Mouse(true)]
+    #[Mouse(MouseEventKind::Moved, true)]
     public function mouseMove(array $data): void
     {
         /** @var MouseEvent $event */

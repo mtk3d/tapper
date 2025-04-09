@@ -7,16 +7,21 @@ use PhpTui\Term\Event\CodedKeyEvent;
 use PhpTui\Term\Event\FunctionKeyEvent;
 use PhpTui\Term\Event\MouseEvent;
 use PhpTui\Term\KeyCode;
+use PhpTui\Term\MouseEventKind;
 
 class EventBus
 {
     private $register = [];
 
     public function listen(
-        KeyCode|string|int $event,
+        MouseEventKind|KeyCode|string|int $event,
         callable $func,
     ): void {
         if ($event instanceof KeyCode) {
+            $event = $event->name;
+        }
+
+        if ($event instanceof MouseEventKind) {
             $event = $event->name;
         }
 
@@ -52,7 +57,7 @@ class EventBus
         }
 
         if ($event instanceof MouseEvent) {
-            $key = 'Mouse';
+            $key = $event->kind->name;
             $data = [
                 'event' => $event,
             ];

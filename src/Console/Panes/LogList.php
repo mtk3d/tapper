@@ -3,6 +3,7 @@
 namespace Tapper\Console\Panes;
 
 use PhpTui\Term\KeyCode;
+use PhpTui\Term\MouseEventKind;
 use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
@@ -10,6 +11,7 @@ use PhpTui\Tui\Layout\Constraint;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
 use Tapper\Console\CommandAttributes\KeyPressed;
+use Tapper\Console\CommandAttributes\Mouse;
 use Tapper\Console\CommandAttributes\OnEvent;
 use Tapper\Console\Component;
 use Tapper\Console\Components\LogItem;
@@ -79,6 +81,16 @@ class LogList extends Pane
         }
     }
 
+    #[Mouse(MouseEventKind::ScrollUp)]
+    public function scrollUp(): void
+    {
+        $this->offsetUp();
+
+        if ($this->appState->cursor >= $this->appState->offset + $this->maxItems) {
+            $this->appState->cursor--;
+        }
+    }
+
     public function offsetUp(): void
     {
         if ($this->appState->offset > 0) {
@@ -97,6 +109,16 @@ class LogList extends Pane
 
         if ($this->appState->cursor > $this->maxItems - 1) {
             $this->offsetDown();
+        }
+    }
+
+    #[Mouse(MouseEventKind::ScrollDown)]
+    public function scrollDown(): void
+    {
+        $this->offsetDown();
+
+        if ($this->appState->cursor < $this->appState->offset) {
+            $this->appState->cursor++;
         }
     }
 

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tapper\Console\Components;
 
 use DateTime;
+use PhpTui\Term\MouseEventKind;
 use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
