@@ -23,8 +23,6 @@ use Tapper\Console\Support\Scroll;
 
 class LogList extends Pane
 {
-    private array $logs = [];
-
     private array $listItems = [];
 
     private int $visible = 0;
@@ -33,32 +31,21 @@ class LogList extends Pane
 
     private Scroll $scroll;
 
+    private bool $firstRender = false;
+
     public function mount(): void
     {
         $this->scroll = new Scroll($this->appState);
 
-        $this->appState->observe('logs', fn (array $logs): null => $this->updateLogs($logs));
+        $this->appState->observe('logs', fn (): null => $this->updateLogs());
         $this->appState->observe('cursor', function (int $cursor): void {
             $this->appState->live = $cursor >= $this->count - 1;
         });
     }
 
-    public function updateLogs(array $data): void
+    public function updateLogs(): void
     {
-        $this->logs = $data;
-        $this->count = count($this->logs);
-
-        $this->updateVisible();
-    }
-
-    #[OnEvent('resize')]
-    public function updateVisible(): void
-    {
-        if ($this->area) {
-            $this->visible = floor($this->area->height / 3);
-        }
-
-        $this->ensureVisible();
+        $this->count = count($this->appState->logs());
 
         if ($this->appState->live) {
             $this->scroll->scrollToBottom($this->count, $this->visible);
@@ -67,9 +54,20 @@ class LogList extends Pane
         $this->fill();
     }
 
+    #[OnEvent('resize')]
+    public function updateVisible(): void
+    {
+        if ($this->area) {
+            $this->visible = floor($this->area->height / LogItem::HEIGHT);
+        }
+
+        $this->ensureVisible();
+        $this->fill();
+    }
+
     private function ensureVisible(): void
     {
-        $visible = min($this->visible, $this->count);
+        $visible = $this->visible;
         $existing = count($this->listItems);
 
         if ($visible > $existing) {
@@ -87,7 +85,7 @@ class LogList extends Pane
     {
         foreach ($this->listItems as $i => $component) {
             $logIndex = $this->appState->offset + $i;
-            $log = $this->logs[$logIndex] ?? null;
+            $log = $this->appState->logs()[$logIndex] ?? null;
 
             if ($log !== null) {
                 $component->setData($log);
@@ -142,10 +140,16 @@ class LogList extends Pane
     {
         $this->area = $area;
 
+        // @TODO add afterFirstRender() co component
+        if (! $this->firstRender) {
+            $this->ensureVisible();
+            $this->firstRender = true;
+        }
+
         return CompositeWidget::fromWidgets(
             GridWidget::default()
                 ->direction(Direction::Vertical)
-                ->constraints(...array_fill(0, count($this->listItems), Constraint::length(3)))
+                ->constraints(...array_fill(0, $this->visible, Constraint::length(LogItem::HEIGHT)))
                 ->widgets(
                     ...array_map(
                         fn (Component $item): Widget => $item->render($area),
