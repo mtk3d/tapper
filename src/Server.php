@@ -14,15 +14,20 @@ class Server
 {
     private static $id = 0;
 
-    public function run(AppState $appState, EventBus $eventBus): void
-    {
-        $server = new SocketServer('127.0.0.1:2137');
+    public function __construct(
+        private readonly AppState $appState,
+        private readonly EventBus $eventBus
+    ) {}
 
-        $server->on('connection', function (\React\Socket\ConnectionInterface $conn) use ($appState, $eventBus) {
+    public function run(): void
+    {
+        $server = new SocketServer('127.0.0.1:2138');
+
+        $server->on('connection', function (\React\Socket\ConnectionInterface $conn) {
             $decoder = new Decoder($conn, true);
             $encoder = new Encoder($conn, true);
 
-            $decoder->on('data', function ($message) use ($conn, $encoder, $appState, $eventBus) {
+            $decoder->on('data', function ($message) use ($encoder) {
 
                 if (($message['jsonrpc'] ?? '') !== '2.0') {
                     $encoder->write([
@@ -43,7 +48,7 @@ class Server
 
                 switch ($method) {
                     case 'log':
-                        $appState->appendLog(new LogItem(
+                        $this->appState->appendLog(new LogItem(
                             self::$id,
                             $params['microtime'],
                             json_encode($params['message'], JSON_UNESCAPED_UNICODE),
@@ -60,7 +65,7 @@ class Server
                         break;
 
                     case 'wait':
-                        $appState->appendLog(new LogItem(
+                        $this->appState->appendLog(new LogItem(
                             self::$id,
                             $params['microtime'],
                             "⏸ {$params['message']} — press ENTER to continue",
@@ -69,7 +74,7 @@ class Server
 
                         self::$id++;
 
-                        $eventBus->listen(KeyCode::Enter, fn () => ($encoder->write([
+                        $this->eventBus->listen(KeyCode::Enter, fn () => ($encoder->write([
                             'jsonrpc' => '2.0',
                             'result' => 'continue',
                             'id' => $id,
