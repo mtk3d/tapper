@@ -21,6 +21,7 @@ use Tapper\Console\State\AppState;
 use Tapper\Console\Windows\Main;
 use Tapper\Console\Windows\Popup;
 use Tapper\Console\Windows\Window;
+use Tapper\Server;
 
 class Application
 {
@@ -42,6 +43,7 @@ class Application
         private CommandInvoker $commandInvoker,
         private Container $container,
         private AppState $appState,
+        private Server $server,
     ) {
         $this->eventParser = new EventParser;
     }
@@ -58,6 +60,7 @@ class Application
         $this->init();
         $this->startRendering();
         $this->startInputHandling();
+        $this->server->run();
         $this->loop->run();
 
         $this->loop->addSignal(SIGINT, function () {
@@ -80,11 +83,6 @@ class Application
     {
         $this->loop->addPeriodicTimer(1 / 60, function () {
             $area = $this->display->viewportArea();
-            if ($area != $this->previousArea) {
-                $this->eventBus->emit('resize');
-            }
-
-            $this->previousArea = $area;
 
             $this->display->draw(
                 CompositeWidget::fromWidgets(
@@ -92,6 +90,12 @@ class Application
                     $this->popup->isActive() ? $this->popup->render($area) : BlockWidget::default(),
                 ),
             );
+
+            if ($area != $this->previousArea) {
+                $this->eventBus->emit('resize');
+            }
+
+            $this->previousArea = $area;
         });
     }
 

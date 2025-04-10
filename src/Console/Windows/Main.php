@@ -12,22 +12,18 @@ use Tapper\Console\Panes\Details;
 use Tapper\Console\Panes\Header;
 use Tapper\Console\Panes\LogList;
 use Tapper\Console\Panes\Navigation;
+use Tapper\Console\Panes\Splash;
 use Tapper\Console\State\LogItem;
-use Tapper\Server;
 
 class Main extends Window
 {
     protected array $components = [
         Header::class,
-        LogList::class,
         Details::class,
+        LogList::class,
         Navigation::class,
+        Splash::class,
     ];
-
-    public function init(): void
-    {
-        (new Server)->run($this->appState, $this->eventBus);
-    }
 
     public function mount(): void
     {
@@ -48,20 +44,28 @@ class Main extends Window
     {
         $verticalConstraints = [
             Constraint::length(2),
-            Constraint::length($area->height - 5),
-            Constraint::length(3),
+            Constraint::length($area->height - 4),
+            Constraint::length(2),
         ];
         $verticalLayout = Layout::default()
             ->direction(Direction::Vertical)
             ->constraints($verticalConstraints)
             ->split($area);
 
+        $middle = $verticalLayout->get(1);
+
+        if ($this->appState->previewLog !== null) {
+            $main = $this->getComponent(Details::class);
+        } else {
+            $main = $this->getComponent(LogList::class);
+        }
+
         return GridWidget::default()
             ->direction(Direction::Vertical)
             ->constraints(...$verticalConstraints)
             ->widgets(
                 $this->renderComponent(Header::class, $verticalLayout->get(0)),
-                $this->appState->previewLog !== null ? $this->renderComponent(Details::class, $verticalLayout->get(1)) : $this->renderComponent(LogList::class, $verticalLayout->get(1)),
+                $main->render($middle),
                 $this->renderComponent(Navigation::class, $verticalLayout->get(2)),
             );
     }
