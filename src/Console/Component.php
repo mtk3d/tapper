@@ -24,6 +24,8 @@ abstract class Component
 
     protected array $timers = [];
 
+    protected ?Area $area = null;
+
     public function __construct(
         protected readonly LoopInterface $loop,
         protected readonly EventBus $eventBus,

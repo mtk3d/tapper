@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tapper\Console\Components;
 
 use DateTime;
+use PhpTui\Term\MouseEventKind;
 use PhpTui\Tui\Color\RgbColor;
 use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
@@ -17,12 +18,15 @@ use PhpTui\Tui\Text\Span;
 use PhpTui\Tui\Text\Text;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
+use Tapper\Console\CommandAttributes\Mouse;
 use Tapper\Console\Component;
 use Tapper\Console\MessageFormatter;
 use Tapper\Console\State\LogItem as LogItemState;
 
 class LogItem extends Component
 {
+    public const int HEIGHT = 3;
+
     private ?LogItemState $log = null;
 
     public function setData(LogItemState $log): void
@@ -30,8 +34,41 @@ class LogItem extends Component
         $this->log = $log;
     }
 
+    #[Mouse(MouseEventKind::Up, true)]
+    public function mouseMove(array $data): void
+    {
+        /** @var MouseEvent $event */
+        $event = $data['event'];
+
+        if (! $this->log) {
+            return;
+        }
+
+        $position = ($this->log->id - $this->appState->offset) * self::HEIGHT;
+
+        if ($event->row > $position
+            && $event->row < $position + self::HEIGHT
+        ) {
+
+            $this->click();
+
+            return;
+        }
+    }
+
+    public function click(): void
+    {
+        if ($this->appState->cursor === $this->log->id) {
+            $this->appState->previewLog = $this->log;
+        } else {
+            $this->appState->cursor = $this->log->id;
+        }
+    }
+
     public function render(Area $area): Widget
     {
+        $this->area = $area;
+
         if (! $this->log) {
             return BlockWidget::default();
         }
