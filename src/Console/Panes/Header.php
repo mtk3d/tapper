@@ -10,8 +10,9 @@ use PhpTui\Tui\Widget\Borders;
 use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Widget;
 use Tapper\Console\CommandAttributes\Periodic;
+use Tapper\Console\Component;
 
-class Header extends Pane
+class Header extends Component
 {
     private $show = true;
 
@@ -25,10 +26,8 @@ class Header extends Pane
         $this->show = ! $this->show;
     }
 
-    public function render(Area $area): Widget
+    public function view(Area $area): Widget
     {
-        $this->area = $area;
-
         $live = $this->appState->live;
 
         return

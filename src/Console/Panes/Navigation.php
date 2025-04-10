@@ -11,14 +11,11 @@ use PhpTui\Tui\Text\Span;
 use PhpTui\Tui\Widget\Borders;
 use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Widget;
+use Tapper\Console\Component;
 
-class Navigation extends Pane
+class Navigation extends Component
 {
-    public function init(): void {}
-
-    public function mount(): void {}
-
-    public function render(Area $area): Widget
+    public function view(Area $area): Widget
     {
         $this->area = $area;
 

@@ -65,7 +65,7 @@ class LogItem extends Component
         }
     }
 
-    public function render(Area $area): Widget
+    public function view(Area $area): Widget
     {
         $this->area = $area;
 

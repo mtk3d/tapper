@@ -10,9 +10,10 @@ use PhpTui\Tui\Extension\Core\Widget\ParagraphWidget;
 use PhpTui\Tui\Text\Line;
 use PhpTui\Tui\Widget\Widget;
 use Tapper\Console\CommandAttributes\KeyPressed;
+use Tapper\Console\Component;
 use Tapper\Console\MessageFormatter;
 
-class Details extends Pane
+class Details extends Component
 {
     public function init(): void {}
 
@@ -25,7 +26,7 @@ class Details extends Pane
         $this->appState->previewLog = null;
     }
 
-    public function render(Area $area): Widget
+    public function view(Area $area): Widget
     {
         $log = $this->appState->previewLog;
         $datetime = DateTime::createFromFormat('U.u', sprintf('%.6f', $log->timestamp));

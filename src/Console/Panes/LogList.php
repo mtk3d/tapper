@@ -3,7 +3,6 @@
 namespace Tapper\Console\Panes;
 
 use PhpTui\Term\KeyCode;
-use PhpTui\Term\MouseEventKind;
 use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Extension\Core\Widget\CompositeWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
@@ -15,13 +14,12 @@ use PhpTui\Tui\Layout\Constraint;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
 use Tapper\Console\CommandAttributes\KeyPressed;
-use Tapper\Console\CommandAttributes\Mouse;
 use Tapper\Console\CommandAttributes\OnEvent;
 use Tapper\Console\Component;
 use Tapper\Console\Components\LogItem;
 use Tapper\Console\Support\Scroll;
 
-class LogList extends Pane
+class LogList extends Component
 {
     private array $listItems = [];
 
@@ -31,16 +29,20 @@ class LogList extends Pane
 
     private Scroll $scroll;
 
-    private bool $firstRender = false;
-
     public function mount(): void
     {
         $this->scroll = new Scroll($this->appState);
 
         $this->appState->observe('logs', fn (): null => $this->updateLogs());
         $this->appState->observe('cursor', function (int $cursor): void {
+            tp('cursor '.$cursor);
             $this->appState->live = $cursor >= $this->count - 1;
         });
+    }
+
+    public function onFirstRender(): void
+    {
+        $this->ensureVisible();
     }
 
     public function updateLogs(): void
@@ -136,16 +138,8 @@ class LogList extends Pane
         $this->fill();
     }
 
-    public function render(Area $area): Widget
+    public function view(Area $area): Widget
     {
-        $this->area = $area;
-
-        // @TODO add afterFirstRender() co component
-        if (! $this->firstRender) {
-            $this->ensureVisible();
-            $this->firstRender = true;
-        }
-
         return CompositeWidget::fromWidgets(
             GridWidget::default()
                 ->direction(Direction::Vertical)

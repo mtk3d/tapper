@@ -98,11 +98,6 @@ abstract class Component
         return $this->commandInvoker->invoke($command);
     }
 
-    protected function emit(string $event, array $data = []): void
-    {
-        $this->eventBus->emit($event, $data);
-    }
-
     public function isActive(): bool
     {
         return $this->isActive;
@@ -118,5 +113,19 @@ abstract class Component
         $this->isActive = false;
     }
 
-    abstract public function render(Area $area): Widget;
+    public function render(Area $area): Widget
+    {
+        if ($this->area === null) {
+            $this->area = $area;
+            if (method_exists($this, 'onFirstRender')) {
+                $this->container->call([$this, 'onFirstRender']);
+            }
+        }
+
+        $this->area = $area;
+
+        return $this->view($area);
+    }
+
+    abstract public function view(Area $area): Widget;
 }

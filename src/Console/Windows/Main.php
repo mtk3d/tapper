@@ -40,7 +40,7 @@ class Main extends Window
         });
     }
 
-    public function render(Area $area): Widget
+    public function view(Area $area): Widget
     {
         $verticalConstraints = [
             Constraint::length(2),
