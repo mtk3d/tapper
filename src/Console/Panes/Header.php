@@ -5,7 +5,6 @@ namespace Tapper\Console\Panes;
 use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\ParagraphWidget;
-use PhpTui\Tui\Style\Style;
 use PhpTui\Tui\Text\Span;
 use PhpTui\Tui\Widget\Borders;
 use PhpTui\Tui\Widget\BorderType;
@@ -36,12 +35,11 @@ class Header extends Pane
             BlockWidget::default()
                 ->borders(Borders::BOTTOM)
                 ->borderType(BorderType::Plain)
-                ->borderStyle($this->isActive ? Style::default()->white() : Style::default()->gray())
                 ->widget(
                     ParagraphWidget::fromSpans(
                         Span::fromString(sprintf('Tapper %s | port: %s |', $this->appState->version, $this->appState->port)),
                         Span::fromString(' '),
-                        Span::fromString($live ? ($this->show ? '●' : ' ') : '⏸'),
+                        $live ? Span::fromString($this->show ? '●' : ' ')->red() : Span::fromString('⏸')->blue(),
                         Span::fromString(' '),
                         Span::fromString($live ? 'LIVE' : 'PAUSED'),
                     ),
