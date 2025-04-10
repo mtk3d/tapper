@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tapper\Console\Components;
 
 use DateTime;
-use PhpTui\Term\MouseEventKind;
+use PhpTui\Tui\Color\RgbColor;
 use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
@@ -14,6 +14,7 @@ use PhpTui\Tui\Layout\Constraint;
 use PhpTui\Tui\Style\Style;
 use PhpTui\Tui\Text\Line;
 use PhpTui\Tui\Text\Span;
+use PhpTui\Tui\Text\Text;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
 use Tapper\Console\Component;
@@ -39,28 +40,53 @@ class LogItem extends Component
         $date = $dt->format('Y-m-d');
         $time = $dt->format('H:i:s.u');
 
-        $marker = $this->appState->cursor === $this->log->id ? '█ ' : '  ';
+        $mark = $this->appState->cursor === $this->log->id;
 
         $darkGray = Style::default()->darkGray();
+        $markerColor = RgbColor::fromHex('2a2e42');
+        $mStyle = Style::default()->bg($markerColor);
 
         $message = $this->log->message;
+
+        $firstLine = ParagraphWidget::fromText(
+            Text::fromLines(
+                Line::fromSpans(Span::styled("$time", Style::default()->fg(RgbColor::fromHex('7aa2f7')))),
+                Line::fromSpans(Span::styled("$date", $darkGray)),
+            )
+        );
+
+        $wMess = ParagraphWidget::fromSpans(...MessageFormatter::colorizeInlineJson($message));
+        $wFile = ParagraphWidget::fromSpans(Span::styled(sprintf('↪ %s', $this->log->caller), $darkGray));
+
+        if ($mark) {
+            $firstLine->style($mStyle);
+            $wMess->style($mStyle);
+            $wFile->style($mStyle);
+        }
+
+        $firstLine = GridWidget::default()
+            ->direction(Direction::Vertical)
+            ->constraints(Constraint::length(2), Constraint::length(1))
+            ->widgets($firstLine);
+
+        $secondLine = GridWidget::default()
+            ->direction(Direction::Vertical)
+            ->constraints(Constraint::length(1), Constraint::length(1), Constraint::length(1))
+            ->widgets(
+                $wMess,
+                $wFile,
+            );
 
         return BlockWidget::default()
             ->widget(
                 GridWidget::default()
                     ->direction(Direction::Horizontal)
                     ->constraints(
-                        Constraint::length(20),
-                        Constraint::length($area->width - 20),
+                        Constraint::length(17),
+                        Constraint::length($area->width - 17),
                     )->widgets(
-                        ParagraphWidget::fromLines(
-                            Line::fromSpans(Span::styled($marker, $darkGray), Span::styled("$time", Style::default()->blue())),
-                            Line::fromSpans(Span::styled($marker, $darkGray), Span::styled("$date", $darkGray)),
-                        ),
-                        ParagraphWidget::fromLines(
-                            json_validate($message) ? Line::fromSpans(...MessageFormatter::colorizeInlineJson($message)) : Line::fromSpan(Span::fromString("$message")),
-                            Line::fromSpan(Span::styled(sprintf('↪ %s', $this->log->caller), $darkGray)),
-                        ),
+                        $firstLine,
+                        $secondLine,
                     ),
             );
     }
