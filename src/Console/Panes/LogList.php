@@ -5,8 +5,12 @@ namespace Tapper\Console\Panes;
 use PhpTui\Term\KeyCode;
 use PhpTui\Term\MouseEventKind;
 use PhpTui\Tui\Display\Area;
-use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
+use PhpTui\Tui\Extension\Core\Widget\CompositeWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
+use PhpTui\Tui\Extension\Core\Widget\Scrollbar\ScrollbarOrientation;
+use PhpTui\Tui\Extension\Core\Widget\Scrollbar\ScrollbarState;
+use PhpTui\Tui\Extension\Core\Widget\Scrollbar\ScrollbarSymbols;
+use PhpTui\Tui\Extension\Core\Widget\ScrollbarWidget;
 use PhpTui\Tui\Layout\Constraint;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
@@ -15,7 +19,7 @@ use Tapper\Console\CommandAttributes\Mouse;
 use Tapper\Console\CommandAttributes\OnEvent;
 use Tapper\Console\Component;
 use Tapper\Console\Components\LogItem;
-use Tapper\Console\Support\VirtualListManager;
+use Tapper\Console\Support\Scroll;
 
 class LogList extends Pane
 {
@@ -23,15 +27,15 @@ class LogList extends Pane
 
     private array $listItems = [];
 
-    private int $maxItems = 0;
+    private int $visible = 0;
 
     private int $count = 0;
 
-    private VirtualListManager $list;
+    private Scroll $scroll;
 
     public function mount(): void
     {
-        $this->list = new VirtualListManager($this->container, LogItem::class, $this->listItems);
+        $this->scroll = new Scroll($this->appState);
 
         $this->appState->observe('logs', fn (array $logs): null => $this->updateLogs($logs));
         $this->appState->observe('cursor', function (int $cursor): void {
@@ -42,7 +46,7 @@ class LogList extends Pane
     public function updateLogs(array $data): void
     {
         $this->logs = $data;
-        $this->count = count($data);
+        $this->count = count($this->logs);
 
         $this->updateVisible();
     }
@@ -51,83 +55,74 @@ class LogList extends Pane
     public function updateVisible(): void
     {
         if ($this->area) {
-            $this->maxItems = floor($this->area->height / 3);
+            $this->visible = floor($this->area->height / 3);
         }
+
+        $this->ensureVisible();
 
         if ($this->appState->live) {
-            $this->scrollToBottom();
+            $this->scroll->scrollToBottom($this->count, $this->visible);
         }
-
-        $this->list->ensureVisible(min($this->maxItems, $this->count));
 
         $this->fill();
     }
 
-    public function fill(): void
+    private function ensureVisible(): void
     {
-        $this->list->fill($this->logs, $this->appState->offset);
+        $visible = min($this->visible, $this->count);
+        $existing = count($this->listItems);
+
+        if ($visible > $existing) {
+            for ($i = $existing; $i < $visible; $i++) {
+                $this->listItems[] = $this->container->make(LogItem::class);
+            }
+        }
+
+        if ($visible < $existing) {
+            $this->listItems = array_slice($this->listItems, 0, $visible);
+        }
+    }
+
+    private function fill(): void
+    {
+        foreach ($this->listItems as $i => $component) {
+            $logIndex = $this->appState->offset + $i;
+            $log = $this->logs[$logIndex] ?? null;
+
+            if ($log !== null) {
+                $component->setData($log);
+            }
+        }
     }
 
     #[KeyPressed(KeyCode::Up)]
     #[KeyPressed('k')]
     public function up(): void
     {
-        if ($this->appState->cursor > 0) {
-            $this->appState->cursor--;
-        }
-
-        if ($this->appState->cursor < $this->appState->offset) {
-            $this->offsetUp();
-        }
+        $this->scroll->cursorUp($this->count, $this->visible);
+        $this->fill();
     }
 
     #[Mouse(MouseEventKind::ScrollUp)]
     public function scrollUp(): void
     {
-        $this->offsetUp();
-
-        if ($this->appState->cursor >= $this->appState->offset + $this->maxItems) {
-            $this->appState->cursor--;
-        }
-    }
-
-    public function offsetUp(): void
-    {
-        if ($this->appState->offset > 0) {
-            $this->appState->offset--;
-            $this->fill();
-        }
+        $this->scroll->scrollUp($this->count, $this->visible);
+        $this->fill();
     }
 
     #[KeyPressed(KeyCode::Down)]
     #[KeyPressed('j')]
     public function down(): void
     {
-        if ($this->appState->cursor < $this->count - 1) {
-            $this->appState->cursor++;
-        }
-
-        if ($this->appState->cursor > $this->maxItems - 1) {
-            $this->offsetDown();
-        }
+        $this->scroll->cursorDown($this->count, $this->visible);
+        $this->fill();
     }
 
     #[Mouse(MouseEventKind::ScrollDown)]
     public function scrollDown(): void
     {
-        $this->offsetDown();
-
-        if ($this->appState->cursor < $this->appState->offset) {
-            $this->appState->cursor++;
-        }
-    }
-
-    public function offsetDown(): void
-    {
-        if ($this->appState->offset < $this->count - $this->maxItems) {
-            $this->appState->offset++;
-            $this->fill();
-        }
+        $this->scroll->scrollDown($this->count, $this->visible);
+        $this->fill();
     }
 
     #[KeyPressed(' ')]
@@ -139,38 +134,30 @@ class LogList extends Pane
     #[KeyPressed(KeyCode::Esc)]
     public function exitUserNav(): void
     {
-        $this->scrollToBottom();
+        $this->scroll->scrollToBottom($this->count, $this->visible);
         $this->fill();
-    }
-
-    private function scrollToBottom(): void
-    {
-        $newOffset = $this->count - $this->maxItems;
-
-        if ($newOffset > 0) {
-            $this->appState->offset = $newOffset;
-        }
-
-        $this->appState->cursor = $this->count - 1;
     }
 
     public function render(Area $area): Widget
     {
         $this->area = $area;
 
-        $this->maxItems = floor($area->height / 3);
-
-        return BlockWidget::default()
-            ->widget(
-                GridWidget::default()
-                    ->direction(Direction::Vertical)
-                    ->constraints(...array_fill(0, $this->maxItems, Constraint::length(3)))
-                    ->widgets(
-                        ...array_map(
-                            fn (Component $item): Widget => $item->render($area),
-                            $this->listItems
-                        )
-                    )
-            );
+        return CompositeWidget::fromWidgets(
+            GridWidget::default()
+                ->direction(Direction::Vertical)
+                ->constraints(...array_fill(0, count($this->listItems), Constraint::length(3)))
+                ->widgets(
+                    ...array_map(
+                        fn (Component $item): Widget => $item->render($area),
+                        $this->listItems
+                    ),
+                ),
+            ScrollbarWidget::default()
+                ->state(new ScrollbarState(max(0, $this->count - $this->visible), $this->appState->offset, 1))
+                ->orientation(ScrollbarOrientation::VerticalRight)
+                ->symbols(new ScrollbarSymbols('│', '█', '', ''))
+                ->endSymbol(null)
+                ->beginSymbol(null),
+        );
     }
 }
