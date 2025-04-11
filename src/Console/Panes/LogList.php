@@ -3,6 +3,7 @@
 namespace Tapper\Console\Panes;
 
 use PhpTui\Term\KeyCode;
+use PhpTui\Term\MouseEventKind;
 use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Extension\Core\Widget\CompositeWidget;
 use PhpTui\Tui\Extension\Core\Widget\GridWidget;
@@ -14,6 +15,7 @@ use PhpTui\Tui\Layout\Constraint;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
 use Tapper\Console\CommandAttributes\KeyPressed;
+use Tapper\Console\CommandAttributes\Mouse;
 use Tapper\Console\CommandAttributes\OnEvent;
 use Tapper\Console\Component;
 use Tapper\Console\Components\LogItem;
@@ -43,6 +45,7 @@ class LogList extends Component
     public function onFirstRender(): void
     {
         $this->ensureVisible();
+        $this->updateVisible();
     }
 
     public function updateLogs(): void
@@ -138,7 +141,7 @@ class LogList extends Component
         $this->fill();
     }
 
-    public function view(Area $area): Widget
+    protected function view(Area $area): Widget
     {
         return CompositeWidget::fromWidgets(
             GridWidget::default()
