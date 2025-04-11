@@ -19,14 +19,14 @@ class Details extends Component
 
     public function mount(): void {}
 
-    #[KeyPressed(KeyCode::Backspace, true)]
-    #[KeyPressed(KeyCode::Esc, true)]
+    #[KeyPressed(KeyCode::Backspace)]
+    #[KeyPressed(KeyCode::Esc)]
     public function close(): void
     {
         $this->appState->previewLog = null;
     }
 
-    public function view(Area $area): Widget
+    protected function view(Area $area): Widget
     {
         $log = $this->appState->previewLog;
         $datetime = DateTime::createFromFormat('U.u', sprintf('%.6f', $log->timestamp));
