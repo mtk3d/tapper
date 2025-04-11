@@ -37,7 +37,6 @@ class LogList extends Component
 
         $this->appState->observe('logs', fn (): null => $this->updateLogs());
         $this->appState->observe('cursor', function (int $cursor): void {
-            tp('cursor '.$cursor);
             $this->appState->live = $cursor >= $this->count - 1;
         });
     }
