@@ -22,7 +22,7 @@ class EventBus
         }
 
         if ($event instanceof MouseEventKind) {
-            $event = $event->name;
+            $event = "Mouse{$event->name}";
         }
 
         if (! isset($this->register[$event])) {
@@ -57,7 +57,7 @@ class EventBus
         }
 
         if ($event instanceof MouseEvent) {
-            $key = $event->kind->name;
+            $key = "Mouse{$event->kind->name}";
             $data = [
                 'event' => $event,
             ];

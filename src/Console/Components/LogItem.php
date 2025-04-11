@@ -34,7 +34,7 @@ class LogItem extends Component
         $this->log = $log;
     }
 
-    #[Mouse(MouseEventKind::Up, true)]
+    #[Mouse(MouseEventKind::Down, true)]
     public function mouseMove(array $data): void
     {
         /** @var MouseEvent $event */
