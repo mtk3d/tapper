@@ -73,8 +73,7 @@ class Tapper
         $result = $response['result'] ?? null;
 
         if (! in_array($result, ['ok', 'continue'])) {
-            error_log('[Tapper] server not responding.');
-            exit;
+            throw new \Exception('[Tapper] server not responding.');
         }
     }
 }

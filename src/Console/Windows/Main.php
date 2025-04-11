@@ -56,8 +56,10 @@ class Main extends Window
 
         if ($this->appState->previewLog !== null) {
             $main = $this->getComponent(Details::class);
-        } else {
+        } elseif (count($this->appState->logs) > 0) {
             $main = $this->getComponent(LogList::class);
+        } else {
+            $main = $this->getComponent(Splash::class);
         }
 
         return GridWidget::default()

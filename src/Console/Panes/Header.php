@@ -36,11 +36,12 @@ class Header extends Component
                 ->borderType(BorderType::Plain)
                 ->widget(
                     ParagraphWidget::fromSpans(
-                        Span::fromString(sprintf('Tapper %s | port: %s |', $this->appState->version, $this->appState->port)),
                         Span::fromString(' '),
                         $live ? Span::fromString($this->show ? '●' : ' ')->red() : Span::fromString('⏸')->blue(),
                         Span::fromString(' '),
                         Span::fromString($live ? 'LIVE' : 'PAUSED'),
+                        Span::fromString(' | '),
+                        Span::fromString(sprintf('port: %s', $this->appState->port)),
                     ),
                 );
     }
