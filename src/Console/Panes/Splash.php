@@ -14,7 +14,7 @@ use Tapper\Console\Component;
 
 class Splash extends Component
 {
-    public function view(Area $area): Widget
+    protected function view(Area $area): Widget
     {
         $name = 'T A P P E R';
 

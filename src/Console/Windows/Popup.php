@@ -10,7 +10,7 @@ class Popup extends Window
 {
     public function init(): void {}
 
-    public function view(Area $area): Widget
+    protected function view(Area $area): Widget
     {
         return BlockWidget::default();
     }

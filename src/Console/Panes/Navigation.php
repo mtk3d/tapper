@@ -15,7 +15,7 @@ use Tapper\Console\Component;
 
 class Navigation extends Component
 {
-    public function view(Area $area): Widget
+    protected function view(Area $area): Widget
     {
         $this->area = $area;
 

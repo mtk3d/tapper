@@ -26,7 +26,7 @@ class Header extends Component
         $this->show = ! $this->show;
     }
 
-    public function view(Area $area): Widget
+    protected function view(Area $area): Widget
     {
         $live = $this->appState->live;
 

@@ -127,5 +127,5 @@ abstract class Component
         return $this->view($area);
     }
 
-    abstract public function view(Area $area): Widget;
+    abstract protected function view(Area $area): Widget;
 }
