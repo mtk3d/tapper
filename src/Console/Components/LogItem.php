@@ -44,12 +44,12 @@ class LogItem extends Component
             return;
         }
 
-        $position = ($this->log->id - $this->appState->offset) * self::HEIGHT;
+        $elementPosInView = ($this->log->id - $this->appState->offset);
+        $itemPosition = ($elementPosInView * self::HEIGHT) + 1;
 
-        if ($event->row > $position
-            && $event->row < $position + self::HEIGHT
+        if ($event->row > $itemPosition
+            && $event->row < $itemPosition + self::HEIGHT
         ) {
-
             $this->click();
 
             return;
@@ -67,8 +67,6 @@ class LogItem extends Component
 
     protected function view(Area $area): Widget
     {
-        $this->area = $area;
-
         if (! $this->log) {
             return BlockWidget::default();
         }
