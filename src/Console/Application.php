@@ -35,6 +35,8 @@ class Application
 
     private ?Area $previousArea = null;
 
+    private ?AppState $previousAppState = null;
+
     public function __construct(
         private LoopInterface $loop,
         private Terminal $terminal,
@@ -81,22 +83,31 @@ class Application
 
     public function startRendering(): void
     {
-        $this->loop->addPeriodicTimer(1 / 60, function () {
+        $this->appState->setOnChange(function () {
+            $area = $this->display->viewportArea();
+            $this->draw($area);
+        });
+
+        $this->loop->addPeriodicTimer(1 / 30, function () {
             $area = $this->display->viewportArea();
 
-            $this->display->draw(
-                CompositeWidget::fromWidgets(
-                    $this->window->render($area),
-                    $this->popup->isActive() ? $this->popup->render($area) : BlockWidget::default(),
-                ),
-            );
-
             if ($area != $this->previousArea) {
+                $this->draw($area);
                 $this->eventBus->emit('resize');
             }
 
             $this->previousArea = $area;
         });
+    }
+
+    private function draw(Area $area): void
+    {
+        $this->display->draw(
+            CompositeWidget::fromWidgets(
+                $this->window->render($area),
+                $this->popup->isActive() ? $this->popup->render($area) : BlockWidget::default(),
+            ),
+        );
     }
 
     public function startInputHandling(): void

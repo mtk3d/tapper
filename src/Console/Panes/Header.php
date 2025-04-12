@@ -9,23 +9,10 @@ use PhpTui\Tui\Text\Span;
 use PhpTui\Tui\Widget\Borders;
 use PhpTui\Tui\Widget\BorderType;
 use PhpTui\Tui\Widget\Widget;
-use Tapper\Console\CommandAttributes\Periodic;
 use Tapper\Console\Component;
 
 class Header extends Component
 {
-    private $show = true;
-
-    public function init(): void {}
-
-    public function mount(): void {}
-
-    #[Periodic(0.8)]
-    public function blink(): void
-    {
-        $this->show = ! $this->show;
-    }
-
     protected function view(Area $area): Widget
     {
         $live = $this->appState->live;
@@ -39,7 +26,7 @@ class Header extends Component
                 ->widget(
                     ParagraphWidget::fromSpans(
                         Span::fromString(' '),
-                        $live ? Span::fromString($this->show ? '●' : ' ')->red() : Span::fromString('⏸')->blue(),
+                        $live ? Span::fromString('●')->red() : Span::fromString('⏸')->blue(),
                         Span::fromString(' '),
                         Span::fromString($live ? 'LIVE' : 'PAUSED'),
                         $unread ? Span::fromString(sprintf(' (↓%s)', $this->appState->unread))->yellow() : Span::fromString(''),

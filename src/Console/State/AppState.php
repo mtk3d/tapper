@@ -10,6 +10,7 @@ use RuntimeException;
  * @property string $version
  * @property int $port
  * @property bool $live
+ * @property bool $showDot
  * @property bool $typingMode
  * @property int $cursor
  * @property int $offset
@@ -21,6 +22,8 @@ class AppState
 {
     private array $observers = [];
 
+    private $change = null;
+
     /**
      * @param  LogItem[]  $logs
      */
@@ -28,6 +31,7 @@ class AppState
         private string $version = '',
         private int $port = 2137,
         private bool $live = true,
+        private bool $showDot = true,
         private bool $typingMode = false,
         private int $cursor = 0,
         private int $offset = 0,
@@ -42,6 +46,11 @@ class AppState
     public function logs(): array
     {
         return $this->logs;
+    }
+
+    public function setOnChange(callable $change): void
+    {
+        $this->change = $change;
     }
 
     public function appendLog(LogItem $logItem): void
@@ -80,6 +89,10 @@ class AppState
 
     private function callObservers(string $name): void
     {
+        if ($this->change) {
+            ($this->change)();
+        }
+
         if (! array_key_exists($name, $this->observers)) {
             return;
         }
