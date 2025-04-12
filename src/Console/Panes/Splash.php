@@ -14,18 +14,25 @@ use Tapper\Console\Component;
 
 class Splash extends Component
 {
+    private const string TAPPER = 'T A P P E R';
+
     protected function view(Area $area): Widget
     {
-        $name = 'T A P P E R';
+        $height = $area->height;
+        $half = (int) floor($height / 2);
+
+        $marginTop = $half - 3;
+        $space = Line::fromString('');
 
         return BlockWidget::default()
             ->widget(
-                ParagraphWidget::fromLines(
-                    Line::fromString(''),
-                    Line::fromString(''),
-                    Line::fromString($name)->alignment(HorizontalAlignment::Center),
+                ParagraphWidget::fromLines(...[
+                    ...array_fill(0, $marginTop, $space),
+                    Line::fromString(self::TAPPER)->alignment(HorizontalAlignment::Center),
                     Line::fromString($this->appState->version)->alignment(HorizontalAlignment::Center)->darkGray(),
-                )
+                    $space,
+                    Line::fromString('Listening...')->alignment(HorizontalAlignment::Center)->darkGray(),
+                ])
             );
     }
 }
