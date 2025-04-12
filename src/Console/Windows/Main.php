@@ -8,6 +8,7 @@ use PhpTui\Tui\Layout\Constraint;
 use PhpTui\Tui\Layout\Layout;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
+use Tapper\Console\Component;
 use Tapper\Console\Panes\Details;
 use Tapper\Console\Panes\Header;
 use Tapper\Console\Panes\LogList;
@@ -24,6 +25,8 @@ class Main extends Window
         Navigation::class,
         Splash::class,
     ];
+
+    private ?Component $mainPane = null;
 
     public function mount(): void
     {
@@ -55,11 +58,11 @@ class Main extends Window
         $middle = $verticalLayout->get(1);
 
         if ($this->appState->previewLog !== null) {
-            $main = $this->getComponent(Details::class);
+            $this->mainPane = $this->getComponent(Details::class);
         } elseif (count($this->appState->logs) > 0) {
-            $main = $this->getComponent(LogList::class);
+            $this->mainPane = $this->getComponent(LogList::class);
         } else {
-            $main = $this->getComponent(Splash::class);
+            $this->mainPane = $this->getComponent(Splash::class);
         }
 
         return GridWidget::default()
@@ -67,7 +70,7 @@ class Main extends Window
             ->constraints(...$verticalConstraints)
             ->widgets(
                 $this->renderComponent(Header::class, $verticalLayout->get(0)),
-                $main->render($middle),
+                $this->mainPane->render($middle),
                 $this->renderComponent(Navigation::class, $verticalLayout->get(2)),
             );
     }

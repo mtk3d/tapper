@@ -24,6 +24,10 @@ class AppState
 
     private $change = null;
 
+    private $batching = false;
+
+    private $changed = [];
+
     /**
      * @param  LogItem[]  $logs
      */
@@ -56,7 +60,10 @@ class AppState
     public function appendLog(LogItem $logItem): void
     {
         $this->logs[] = $logItem;
-        $this->callObservers('logs');
+        if (! $this->batching) {
+            $this->notifyChange();
+            $this->callObservers('logs');
+        }
     }
 
     public function observe(string $name, callable $callable): void
@@ -76,10 +83,31 @@ class AppState
         $this->observers[$name][] = $callable;
     }
 
+    public function deffer(): void
+    {
+        $this->changed = [];
+        $this->batching = true;
+    }
+
+    public function commit(): void
+    {
+        $this->notifyChange();
+
+        foreach ($this->changed as $field) {
+            $this->callObservers($field);
+        }
+
+        $this->changed = [];
+        $this->batching = false;
+    }
+
     public function __set($name, $value)
     {
         $this->$name = $value;
-        $this->callObservers($name);
+        if (! $this->batching) {
+            $this->notifyChange();
+            $this->callObservers($name);
+        }
     }
 
     public function __get($name)
@@ -87,12 +115,15 @@ class AppState
         return $this->$name;
     }
 
-    private function callObservers(string $name): void
+    private function notifyChange(): void
     {
         if ($this->change) {
             ($this->change)();
         }
+    }
 
+    private function callObservers(string $name): void
+    {
         if (! array_key_exists($name, $this->observers)) {
             return;
         }
