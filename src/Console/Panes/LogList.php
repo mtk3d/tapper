@@ -39,6 +39,7 @@ class LogList extends Component
         $this->appState->observe('cursor', function (int $cursor): void {
             $this->appState->live = $cursor >= $this->count - 1;
         });
+        $this->appState->observe('live', fn ($live): bool => $live && $this->appState->unread = 0);
     }
 
     public function onFirstRender(): void
@@ -49,6 +50,10 @@ class LogList extends Component
 
     private function updateLogs(): void
     {
+        if (! $this->appState->live) {
+            $this->appState->unread++;
+        }
+
         $this->count = count($this->appState->logs());
 
         if ($this->appState->live) {

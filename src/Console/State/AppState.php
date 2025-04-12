@@ -13,6 +13,7 @@ use RuntimeException;
  * @property bool $typingMode
  * @property int $cursor
  * @property int $offset
+ * @property int $unread
  * @property ?LogItem $previewLog
  * @property array $logs
  */
@@ -30,6 +31,7 @@ class AppState
         private bool $typingMode = false,
         private int $cursor = 0,
         private int $offset = 0,
+        private int $unread = 0,
         private ?LogItem $previewLog = null,
         private array $logs = [],
     ) {}

@@ -30,6 +30,8 @@ class Header extends Component
     {
         $live = $this->appState->live;
 
+        $unread = $this->appState->unread > 0;
+
         return
             BlockWidget::default()
                 ->borders(Borders::BOTTOM)
@@ -40,6 +42,7 @@ class Header extends Component
                         $live ? Span::fromString($this->show ? '●' : ' ')->red() : Span::fromString('⏸')->blue(),
                         Span::fromString(' '),
                         Span::fromString($live ? 'LIVE' : 'PAUSED'),
+                        $unread ? Span::fromString(sprintf(' (↓%s)', $this->appState->unread))->yellow() : Span::fromString(''),
                         Span::fromString(' | '),
                         Span::fromString(sprintf('port: %s', $this->appState->port)),
                     ),
