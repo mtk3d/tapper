@@ -34,9 +34,9 @@ class Application
 
     private bool $typingMode = false;
 
-    private ?Area $previousArea = null;
+    private Area $area;
 
-    private bool $redrawInNextTick = true;
+    private bool $shouldDraw = true;
 
     public function __construct(
         private LoopInterface $loop,
@@ -54,6 +54,7 @@ class Application
 
     public function run(): int
     {
+        $this->area = $this->phpTermBackend->size();
         $this->appState->version = 'v0.1.1';
         $this->terminal->execute(Actions::alternateScreenEnable());
         $this->terminal->execute(Actions::cursorHide());
@@ -85,23 +86,22 @@ class Application
 
     public function startRendering(): void
     {
-        $this->appState->setOnChange(fn () => $this->redrawInNextTick = true);
+        $this->appState->setOnChange(fn () => $this->shouldDraw = true);
+
+        $this->loop->addPeriodicTimer(1 / 4, function () {
+            if ($this->area != $this->phpTermBackend->size()) {
+                $this->area = $this->phpTermBackend->size();
+                $this->draw($this->area);
+                $this->eventBus->emit('resize');
+                $this->shouldDraw = true;
+            }
+        });
 
         $this->loop->addPeriodicTimer(1 / 60, function () {
-            $area = $this->phpTermBackend->size();
-
-            if ($area != $this->previousArea) {
-                $this->draw($area);
-                $this->eventBus->emit('resize');
-                $this->redrawInNextTick = true;
+            if ($this->shouldDraw) {
+                $this->shouldDraw = false;
+                $this->draw($this->area);
             }
-
-            if ($this->redrawInNextTick) {
-                $this->redrawInNextTick = false;
-                $this->draw($area);
-            }
-
-            $this->previousArea = $area;
         });
     }
 
