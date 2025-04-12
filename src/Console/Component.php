@@ -7,6 +7,7 @@ use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Widget\Widget;
 use React\EventLoop\LoopInterface;
 use ReflectionObject;
+use Tapper\Console\CommandAttributes\FirstRender;
 use Tapper\Console\CommandAttributes\KeyPressed;
 use Tapper\Console\CommandAttributes\Mouse;
 use Tapper\Console\CommandAttributes\OnEvent;
@@ -25,6 +26,8 @@ abstract class Component
     protected array $timers = [];
 
     protected ?Area $area = null;
+
+    private array $firstRenders = [];
 
     public function __construct(
         protected readonly LoopInterface $loop,
@@ -65,6 +68,13 @@ abstract class Component
                 $methodName = $method->getName();
                 $attribute = $attribute->newInstance();
                 $this->timers[] = $loop->addPeriodicTimer($attribute->interval, [$this, $methodName]);
+            }
+
+            $attributes = $method->getAttributes(FirstRender::class);
+            foreach ($attributes as $attribute) {
+                $methodName = $method->getName();
+                $attribute = $attribute->newInstance();
+                $this->firstRenders[] = [$this, $methodName];
             }
         }
 
@@ -117,9 +127,7 @@ abstract class Component
     {
         if ($this->area === null) {
             $this->area = $area;
-            if (method_exists($this, 'onFirstRender')) {
-                $this->container->call([$this, 'onFirstRender']);
-            }
+            $this->callFirstRenders();
         }
 
         $this->area = $area;
@@ -128,4 +136,11 @@ abstract class Component
     }
 
     abstract protected function view(Area $area): Widget;
+
+    private function callFirstRenders(): void
+    {
+        foreach ($this->firstRenders as $firstRender) {
+            $firstRender();
+        }
+    }
 }

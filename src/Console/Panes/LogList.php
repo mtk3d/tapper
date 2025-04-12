@@ -14,6 +14,7 @@ use PhpTui\Tui\Extension\Core\Widget\ScrollbarWidget;
 use PhpTui\Tui\Layout\Constraint;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
+use Tapper\Console\CommandAttributes\FirstRender;
 use Tapper\Console\CommandAttributes\KeyPressed;
 use Tapper\Console\CommandAttributes\Mouse;
 use Tapper\Console\CommandAttributes\OnEvent;
@@ -42,11 +43,6 @@ class LogList extends Component
         $this->appState->observe('live', fn ($live): bool => $live && $this->appState->unread = 0);
     }
 
-    public function onFirstRender(): void
-    {
-        $this->updateVisible();
-    }
-
     private function updateLogs(): void
     {
         if (! $this->appState->live) {
@@ -61,6 +57,7 @@ class LogList extends Component
     }
 
     #[OnEvent('resize')]
+    #[FirstRender()]
     public function updateVisible(): void
     {
         if ($this->area) {
