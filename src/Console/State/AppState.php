@@ -64,6 +64,10 @@ class AppState
             $this->notifyChange();
             $this->callObservers('logs');
         }
+
+        if ($this->batching) {
+            $this->changed[] = 'logs';
+        }
     }
 
     public function observe(string $name, callable $callable): void
@@ -85,25 +89,30 @@ class AppState
 
     public function deffer(): void
     {
-        $this->changed = [];
         $this->batching = true;
     }
 
     public function commit(): void
     {
-        $this->notifyChange();
+        $this->batching = false;
 
         foreach ($this->changed as $field) {
             $this->callObservers($field);
         }
 
         $this->changed = [];
-        $this->batching = false;
+
+        $this->notifyChange();
     }
 
     public function __set($name, $value)
     {
         $this->$name = $value;
+
+        if ($this->batching) {
+            $this->changed[] = $name;
+        }
+
         if (! $this->batching) {
             $this->notifyChange();
             $this->callObservers($name);
