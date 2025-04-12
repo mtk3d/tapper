@@ -1,6 +1,7 @@
 <?php
 
 use PhpTui\Term\Terminal;
+use PhpTui\Tui\Bridge\PhpTerm\PhpTermBackend;
 use PhpTui\Tui\Display\Display;
 use PhpTui\Tui\DisplayBuilder;
 use React\EventLoop\Loop;
@@ -13,7 +14,8 @@ $builder->useAttributes(true);
 $builder->addDefinitions([
     LoopInterface::class => fn () => Loop::get(),
     Terminal::class => fn () => Terminal::new(),
-    Display::class => fn () => DisplayBuilder::default()->build(),
+    PhpTermBackend::class => fn () => PhpTermBackend::new(),
+    Display::class => fn ($c) => DisplayBuilder::default($c->get(PhpTermBackend::class))->build(),
 ]);
 
 $container = $builder->build();

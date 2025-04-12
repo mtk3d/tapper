@@ -29,7 +29,7 @@ class LogItem extends Component
 
     private ?LogItemState $log = null;
 
-    public function setData(LogItemState $log): void
+    public function setData(?LogItemState $log): void
     {
         $this->log = $log;
     }

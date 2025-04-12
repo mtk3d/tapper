@@ -11,6 +11,7 @@ use PhpTui\Term\EventParser;
 use PhpTui\Term\KeyCode;
 use PhpTui\Term\MouseEventKind;
 use PhpTui\Term\Terminal;
+use PhpTui\Tui\Bridge\PhpTerm\PhpTermBackend;
 use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Display\Display;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
@@ -41,6 +42,7 @@ class Application
         private LoopInterface $loop,
         private Terminal $terminal,
         private Display $display,
+        private PhpTermBackend $phpTermBackend,
         private EventBus $eventBus,
         private CommandInvoker $commandInvoker,
         private Container $container,
@@ -86,16 +88,17 @@ class Application
         $this->appState->setOnChange(fn () => $this->redrawInNextTick = true);
 
         $this->loop->addPeriodicTimer(1 / 60, function () {
-            $area = $this->display->viewportArea();
-
-            if ($this->redrawInNextTick) {
-                $this->redrawInNextTick = false;
-                $this->draw($area);
-            }
+            $area = $this->phpTermBackend->size();
 
             if ($area != $this->previousArea) {
                 $this->draw($area);
                 $this->eventBus->emit('resize');
+                $this->redrawInNextTick = true;
+            }
+
+            if ($this->redrawInNextTick) {
+                $this->redrawInNextTick = false;
+                $this->draw($area);
             }
 
             $this->previousArea = $area;

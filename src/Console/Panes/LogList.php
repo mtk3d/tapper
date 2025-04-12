@@ -45,7 +45,6 @@ class LogList extends Component
     public function onFirstRender(): void
     {
         $this->updateVisible();
-        $this->backToLive();
     }
 
     private function updateLogs(): void
@@ -69,6 +68,7 @@ class LogList extends Component
         }
 
         $this->ensureVisible();
+        $this->backToLive();
     }
 
     private function ensureVisible(): void
@@ -92,10 +92,7 @@ class LogList extends Component
         foreach ($this->listItems as $i => $component) {
             $logIndex = $this->appState->offset + $i;
             $log = $this->appState->logs()[$logIndex] ?? null;
-
-            if ($log !== null) {
-                $component->setData($log);
-            }
+            $component->setData($log);
         }
     }
 
