@@ -35,7 +35,7 @@ class Application
 
     private ?Area $previousArea = null;
 
-    private ?AppState $previousAppState = null;
+    private bool $redrawInNextTick = true;
 
     public function __construct(
         private LoopInterface $loop,
@@ -83,13 +83,15 @@ class Application
 
     public function startRendering(): void
     {
-        $this->appState->setOnChange(function () {
-            $area = $this->display->viewportArea();
-            $this->draw($area);
-        });
+        $this->appState->setOnChange(fn () => $this->redrawInNextTick = true);
 
         $this->loop->addPeriodicTimer(1 / 30, function () {
             $area = $this->display->viewportArea();
+
+            if ($this->redrawInNextTick) {
+                $this->redrawInNextTick = false;
+                $this->draw($area);
+            }
 
             if ($area != $this->previousArea) {
                 $this->draw($area);
