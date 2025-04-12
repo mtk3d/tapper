@@ -85,7 +85,7 @@ class Application
     {
         $this->appState->setOnChange(fn () => $this->redrawInNextTick = true);
 
-        $this->loop->addPeriodicTimer(1 / 30, function () {
+        $this->loop->addPeriodicTimer(1 / 60, function () {
             $area = $this->display->viewportArea();
 
             if ($this->redrawInNextTick) {
