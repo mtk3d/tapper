@@ -2,22 +2,16 @@
 
 require __DIR__.'/../vendor/autoload.php';
 
-tp('Start debugging');
+tp('👋 Hello, this is Tapper');
+tp('A tiny debugger for PHP');
+tp('You can send debug messages, just like console.log in JS');
 
-tp('Wait for debugger')->wait();
+tp('It can also send structured data:');
+tp(['fruits' => ['apple', 'banana', 'pineapple']]);
 
-for ($i = 0; $i < 3; $i++) {
-    tp("Log: $i");
+tp('You can pause code execution...');
+foreach (range(1, 3) as $i) {
+    tp("Paused in loop at iteration $i")->wait();
+    tp('That will run after wait');
 }
-
-tp('Show some arrays');
-
-tp(['id' => 1, 'task' => 'resize_image', 'sync' => true]);
-
-tp('Wait for debugger')->wait();
-
-tp(['id' => 2, 'task' => 'send_email', 'sync' => true]);
-
-for ($i = 0; $i < 3; $i++) {
-    tp("Log: $i");
-}
+tp('Now your turn');

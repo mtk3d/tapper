@@ -21,7 +21,7 @@ class Server
 
     public function run(): void
     {
-        $server = new SocketServer('127.0.0.1:2138');
+        $server = new SocketServer('127.0.0.1:2137');
 
         $server->on('connection', function (\React\Socket\ConnectionInterface $conn) {
             $decoder = new Decoder($conn, true);
