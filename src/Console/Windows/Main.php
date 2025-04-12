@@ -16,7 +16,7 @@ use Tapper\Console\Panes\Navigation;
 use Tapper\Console\Panes\Splash;
 use Tapper\Console\State\LogItem;
 
-class Main extends Window
+class Main extends Component
 {
     protected array $components = [
         Header::class,

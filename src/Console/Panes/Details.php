@@ -15,10 +15,6 @@ use Tapper\Console\MessageFormatter;
 
 class Details extends Component
 {
-    public function init(): void {}
-
-    public function mount(): void {}
-
     #[KeyPressed(KeyCode::Backspace)]
     #[KeyPressed(KeyCode::Esc)]
     public function close(): void

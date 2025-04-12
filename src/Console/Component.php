@@ -21,7 +21,7 @@ abstract class Component
 
     protected array $componentInstances = [];
 
-    protected bool $isActive = false;
+    private bool $isActive = false;
 
     protected array $timers = [];
 
