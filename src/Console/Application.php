@@ -4,6 +4,7 @@ namespace Tapper\Console;
 
 use DI\Container;
 use PhpTui\Term\Actions;
+use PhpTui\Term\Event;
 use PhpTui\Term\Event\CharKeyEvent;
 use PhpTui\Term\Event\CodedKeyEvent;
 use PhpTui\Term\Event\MouseEvent;
@@ -14,7 +15,6 @@ use PhpTui\Term\Terminal;
 use PhpTui\Tui\Bridge\PhpTerm\PhpTermBackend;
 use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Display\Display;
-use PhpTui\Tui\Extension\Core\Widget\BlockWidget;
 use PhpTui\Tui\Extension\Core\Widget\CompositeWidget;
 use React\EventLoop\LoopInterface;
 use React\Stream\ReadableResourceStream;
@@ -26,13 +26,13 @@ use Tapper\Server;
 
 class Application
 {
+    const float RESIZE_RATE = 1 / 4;
+
+    const float RENDER_RATE = 1 / 60;
+
     private Window $window;
 
     private Popup $popup;
-
-    private EventParser $eventParser;
-
-    private bool $typingMode = false;
 
     private Area $area;
 
@@ -43,14 +43,13 @@ class Application
         private Terminal $terminal,
         private Display $display,
         private PhpTermBackend $phpTermBackend,
+        private EventParser $eventParser,
         private EventBus $eventBus,
         private CommandInvoker $commandInvoker,
         private Container $container,
         private AppState $appState,
         private Server $server,
-    ) {
-        $this->eventParser = new EventParser;
-    }
+    ) {}
 
     public function run(): int
     {
@@ -78,17 +77,17 @@ class Application
         return 0;
     }
 
-    public function init(): void
+    private function init(): void
     {
         $this->window = $this->container->make(Main::class);
         $this->popup = $this->container->make(Popup::class);
     }
 
-    public function startRendering(): void
+    private function startRendering(): void
     {
         $this->appState->setOnChange(fn () => $this->shouldDraw = true);
 
-        $this->loop->addPeriodicTimer(1 / 4, function () {
+        $this->loop->addPeriodicTimer(self::RESIZE_RATE, function () {
             if ($this->area != $this->phpTermBackend->size()) {
                 $this->area = $this->phpTermBackend->size();
                 $this->draw($this->area);
@@ -97,7 +96,7 @@ class Application
             }
         });
 
-        $this->loop->addPeriodicTimer(1 / 60, function () {
+        $this->loop->addPeriodicTimer(self::RENDER_RATE, function () {
             if ($this->shouldDraw) {
                 $this->shouldDraw = false;
                 $this->draw($this->area);
@@ -107,47 +106,26 @@ class Application
 
     private function draw(Area $area): void
     {
-        $this->display->draw(
-            CompositeWidget::fromWidgets(
-                $this->window->render($area),
-                $this->popup->isActive() ? $this->popup->render($area) : BlockWidget::default(),
-            ),
-        );
+        $widgets = [$this->window->render($area)];
+
+        if ($this->popup->isActive()) {
+            $widgets[] = $this->popup->render($area);
+        }
+
+        $composite = CompositeWidget::fromWidgets(...$widgets);
+
+        $this->display->draw($composite);
     }
 
-    public function startInputHandling(): void
+    private function startInputHandling(): void
     {
-        $this->appState->observe('typingMode', fn (bool $typingMode) => $this->typingMode = $typingMode);
-
         $stdin = new ReadableResourceStream(STDIN, $this->loop);
         $stdin->on('data', function ($data) {
-
             $this->eventParser->advance($data, false);
 
             foreach ($this->eventParser->drain() as $event) {
-                if (in_array($event::class, [CharKeyEvent::class, CodedKeyEvent::class, MouseEvent::class])) {
-                    if ($event instanceof MouseEvent && $this->typingMode) {
-                        if ($event->kind === MouseEventKind::Down) {
-                            $this->appState->typingMode = false;
-                        } else {
-                            continue;
-                        }
-                    }
-
-                    if ($this->typingMode && $event instanceof CharKeyEvent) {
-                        $this->eventBus->emit('input', ['data' => $data]);
-
-                        return;
-                    }
-
-                    if ($this->typingMode && $event->code === KeyCode::Esc) {
-                        $this->appState->typingMode = false;
-
-                        return;
-                    }
-
-                    $this->eventBus->emit($event);
-                }
+                $this->handleEvent($event);
+                $this->handleEventInTypingMode($event, $data);
             }
 
             if ($data === 'q') {
@@ -156,7 +134,47 @@ class Application
         });
     }
 
-    public function close(): void
+    private function handleEvent(Event $event): void
+    {
+        $supportedEvents = [
+            CharKeyEvent::class,
+            CodedKeyEvent::class,
+            MouseEvent::class,
+        ];
+
+        if (in_array($event::class, $supportedEvents)) {
+            $this->eventBus->emit($event);
+        }
+    }
+
+    private function handleEventInTypingMode(Event $event, $data): void
+    {
+        if (! $this->appState->typingMode) {
+            return;
+        }
+
+        if ($event instanceof MouseEvent) {
+            if ($event->kind !== MouseEventKind::Down) {
+                return;
+            }
+
+            $this->appState->typingMode = false;
+        }
+
+        if ($event instanceof CharKeyEvent) {
+            $this->eventBus->emit('input', ['data' => $data]);
+
+            return;
+        }
+
+        if ($event->code === KeyCode::Esc) {
+            $this->appState->typingMode = false;
+
+            return;
+        }
+    }
+
+    private function close(): void
     {
         $this->loop->stop();
         $this->terminal->disableRawMode();
