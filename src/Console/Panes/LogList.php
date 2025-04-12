@@ -31,7 +31,7 @@ class LogList extends Component
 
     private Scroll $scroll;
 
-    public function mount(): void
+    public function init(): void
     {
         $this->scroll = new Scroll($this->appState);
 
@@ -43,19 +43,17 @@ class LogList extends Component
 
     public function onFirstRender(): void
     {
-        $this->ensureVisible();
         $this->updateVisible();
+        $this->backToLive();
     }
 
-    public function updateLogs(): void
+    private function updateLogs(): void
     {
         $this->count = count($this->appState->logs());
 
         if ($this->appState->live) {
             $this->scroll->scrollToBottom($this->count, $this->visible);
         }
-
-        $this->fill();
     }
 
     #[OnEvent('resize')]
@@ -66,7 +64,6 @@ class LogList extends Component
         }
 
         $this->ensureVisible();
-        $this->fill();
     }
 
     private function ensureVisible(): void
@@ -102,14 +99,12 @@ class LogList extends Component
     public function up(): void
     {
         $this->scroll->cursorUp($this->count, $this->visible);
-        $this->fill();
     }
 
     #[Mouse(MouseEventKind::ScrollUp)]
     public function scrollUp(): void
     {
         $this->scroll->scrollUp($this->count, $this->visible);
-        $this->fill();
     }
 
     #[KeyPressed(KeyCode::Down)]
@@ -117,14 +112,12 @@ class LogList extends Component
     public function down(): void
     {
         $this->scroll->cursorDown($this->count, $this->visible);
-        $this->fill();
     }
 
     #[Mouse(MouseEventKind::ScrollDown)]
     public function scrollDown(): void
     {
         $this->scroll->scrollDown($this->count, $this->visible);
-        $this->fill();
     }
 
     #[KeyPressed(' ')]
@@ -134,14 +127,15 @@ class LogList extends Component
     }
 
     #[KeyPressed(KeyCode::Esc)]
-    public function exitUserNav(): void
+    public function backToLive(): void
     {
         $this->scroll->scrollToBottom($this->count, $this->visible);
-        $this->fill();
     }
 
     protected function view(Area $area): Widget
     {
+        $this->fill();
+
         return CompositeWidget::fromWidgets(
             GridWidget::default()
                 ->direction(Direction::Vertical)
