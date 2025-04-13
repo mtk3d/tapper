@@ -72,7 +72,6 @@ class LogItem extends Component
         }
 
         $dt = DateTime::createFromFormat('U.u', sprintf('%.6f', $this->log->timestamp));
-        $date = $dt->format('Y-m-d');
         $time = $dt->format('H:i:s.u');
 
         $mark = $this->appState->cursor === $this->log->id;
@@ -86,7 +85,7 @@ class LogItem extends Component
         $firstLine = ParagraphWidget::fromText(
             Text::fromLines(
                 Line::fromSpans(Span::styled("$time", Style::default()->fg(RgbColor::fromHex('7aa2f7')))),
-                Line::fromSpans(Span::styled("$date", $darkGray)),
+                Line::fromSpans(Span::styled('', $darkGray)),
             )
         );
 
