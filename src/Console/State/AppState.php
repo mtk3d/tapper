@@ -105,6 +105,12 @@ class AppState
         $this->notifyChange();
     }
 
+    /*
+     * @TODO investigate why `changed` overflows
+     * when setting something multiple times,
+     * like pressing enter many times
+     * when waiting is set on tp
+     */
     public function __set($name, $value)
     {
         $this->$name = $value;

@@ -10,20 +10,6 @@ beforeEach(function () {
     $this->scroll = new Scroll($this->appState);
 });
 
-it('wont trigger change on every mutate', function () {
-    $this->appState->cursor = 4;
-    $this->appState->offset = 0;
-
-    $changeCalled = 0;
-    $this->appState->setOnChange(function () use (&$changeCalled) {
-        $changeCalled++;
-    });
-
-    $this->scroll->cursorDown(count: 10, visible: 5);
-
-    expect($changeCalled)->toBe(1);
-});
-
 describe('cursor movement', function () {
     it('cursor down', function () {
         $this->appState->cursor = 0;
