@@ -33,7 +33,7 @@ class LogList extends Component
 
     private Scroll $scroll;
 
-    public function init(): void
+    public function beforeInit(): void
     {
         $this->scroll = new Scroll($this->appState);
 
@@ -49,7 +49,7 @@ class LogList extends Component
     public function updateVisible(): void
     {
         if ($this->area) {
-            $this->visible = floor($this->area->height / LogItem::HEIGHT);
+            $this->visible = (int) floor($this->area->height / LogItem::HEIGHT);
         }
 
         $this->ensureVisible();
@@ -80,6 +80,20 @@ class LogList extends Component
     public function scrollDown(): void
     {
         $this->scroll->scrollDown($this->count, $this->visible);
+    }
+
+    #[KeyPressed('u')]
+    public function pageUp(): void
+    {
+        $halfPage = (int) floor($this->visible / 2);
+        $this->scroll->jump($this->appState->cursor - $halfPage, $this->count, $this->visible);
+    }
+
+    #[KeyPressed('d')]
+    public function pageDown(): void
+    {
+        $halfPage = (int) floor($this->visible / 2);
+        $this->scroll->jump($this->appState->cursor + $halfPage, $this->count, $this->visible);
     }
 
     #[KeyPressed(' ')]

@@ -79,4 +79,33 @@ class Scroll
 
         $this->appState->commit();
     }
+
+    public function jump(int $position, int $count, int $visible): void
+    {
+        if ($position < 0) {
+            $position = 0;
+        }
+
+        if ($position > $count - 1) {
+            $position = $count - 1;
+        }
+
+        $this->appState->deffer();
+
+        if ($this->appState->cursor === $position) {
+            return;
+        }
+
+        $this->appState->cursor = $position;
+
+        if ($this->appState->cursor < $this->appState->offset) {
+            $this->appState->offset = $this->appState->cursor;
+        }
+
+        if ($this->appState->cursor > $this->appState->offset + $visible - 1) {
+            $this->appState->offset = max(0, $this->appState->cursor - $visible + 1);
+        }
+
+        $this->appState->commit();
+    }
 }

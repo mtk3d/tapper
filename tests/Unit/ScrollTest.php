@@ -10,6 +10,20 @@ beforeEach(function () {
     $this->scroll = new Scroll($this->appState);
 });
 
+it('wont trigger change on every mutate', function () {
+    $this->appState->cursor = 4;
+    $this->appState->offset = 0;
+
+    $changeCalled = 0;
+    $this->appState->setOnChange(function () use (&$changeCalled) {
+        $changeCalled++;
+    });
+
+    $this->scroll->cursorDown(count: 10, visible: 5);
+
+    expect($changeCalled)->toBe(1);
+});
+
 describe('cursor movement', function () {
     it('cursor down', function () {
         $this->appState->cursor = 0;
@@ -137,5 +151,52 @@ describe('scroll movement', function () {
 
         expect($this->appState->cursor)->toBe(8);
         expect($this->appState->offset)->toBe(4);
+    });
+});
+
+describe('scroll jumping', function () {
+    it('jump to specific item', function () {
+        $this->appState->cursor = 0;
+        $this->appState->offset = 0;
+        $this->scroll->jump(position: 2, count: 10, visible: 5);
+
+        expect($this->appState->cursor)->toBe(2);
+        expect($this->appState->offset)->toBe(0);
+    });
+
+    it('moving offset up on jump', function () {
+        $this->appState->cursor = 9;
+        $this->appState->offset = 5;
+        $this->scroll->jump(position: 2, count: 10, visible: 5);
+
+        expect($this->appState->cursor)->toBe(2);
+        expect($this->appState->offset)->toBe(2);
+    });
+
+    it('moving offset down on jump', function () {
+        $this->appState->cursor = 0;
+        $this->appState->offset = 0;
+        $this->scroll->jump(position: 7, count: 10, visible: 5);
+
+        expect($this->appState->cursor)->toBe(7);
+        expect($this->appState->offset)->toBe(3);
+    });
+
+    it('jump to top if less than 0', function () {
+        $this->appState->cursor = 4;
+        $this->appState->offset = 2;
+        $this->scroll->jump(position: -2, count: 10, visible: 5);
+
+        expect($this->appState->cursor)->toBe(0);
+        expect($this->appState->offset)->toBe(0);
+    });
+
+    it('jump to the end if more than count', function () {
+        $this->appState->cursor = 0;
+        $this->appState->offset = 0;
+        $this->scroll->jump(position: 12, count: 10, visible: 5);
+
+        expect($this->appState->cursor)->toBe(9);
+        expect($this->appState->offset)->toBe(5);
     });
 });
