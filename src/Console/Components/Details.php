@@ -16,6 +16,7 @@ use PhpTui\Tui\Extension\Core\Widget\Scrollbar\ScrollbarOrientation;
 use PhpTui\Tui\Extension\Core\Widget\Scrollbar\ScrollbarState;
 use PhpTui\Tui\Extension\Core\Widget\Scrollbar\ScrollbarSymbols;
 use PhpTui\Tui\Extension\Core\Widget\ScrollbarWidget;
+use PhpTui\Tui\Style\Style;
 use PhpTui\Tui\Text\Line;
 use PhpTui\Tui\Text\Text;
 use PhpTui\Tui\Widget\Widget;
@@ -75,16 +76,35 @@ class Details extends Component
         );
     }
 
+    private function parseStackTrace(string $rootDir, array $trace): array
+    {
+        $stack = array_map(function ($item) use ($rootDir) {
+            $file = sprintf(
+                '%s:%s',
+                str_replace($rootDir, '', $item['file']),
+                $item['line'],
+            );
+
+            return ListItem::fromString($file)->style(Style::default()->bold()->darkGray());
+        }, $trace);
+
+        return [
+            ListItem::fromString('──────────────────── Backtrace ────────────────────'),
+            ListItem::fromString(''),
+            ...$stack,
+        ];
+    }
+
     protected function view(Area $area): Widget
     {
         $log = $this->appState->previewLog;
         $datetime = DateTime::createFromFormat('U.u', sprintf('%.6f', $log->timestamp));
-        $formatted = $datetime->format('Y-m-d H:i:s.u');
+        $formatted = $datetime->format('H:i:s.u');
 
         $info = [
             Line::fromString(sprintf('Log #%s | %s', $log->id, $log->caller)),
             Line::fromString($formatted),
-            Line::fromString(''),
+            Line::fromstring(''),
             Line::fromString('──────────────────── Payload ────────────────────'),
             Line::fromString(''),
         ];
@@ -93,9 +113,14 @@ class Details extends Component
         $formattedMessage = MessageFormatter::colorizeFormattedJson($log->message);
         $formattedListItems = array_map(fn ($line) => ListItem::new(Text::fromLine($line)), $formattedMessage);
 
+        $stackTrace = $this->parseStackTrace($log->rootDir, $log->trace);
+        $stackTrace[2]->style(Style::default()->yellow());
+
         $allItems = [
             ...$infoListItems,
             ...$formattedListItems,
+            ListItem::fromString(''),
+            ...$stackTrace,
         ];
 
         $this->count = count($allItems);

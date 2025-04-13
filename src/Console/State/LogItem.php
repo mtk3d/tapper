@@ -11,5 +11,7 @@ class LogItem
         public float $timestamp,
         public string $message,
         public string $caller,
+        public array $trace,
+        public string $rootDir,
     ) {}
 }

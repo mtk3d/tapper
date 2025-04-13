@@ -55,6 +55,8 @@ class Server
                             $params['microtime'],
                             json_encode($params['message'], JSON_UNESCAPED_UNICODE),
                             $params['caller'],
+                            $params['trace'],
+                            $params['rootDir'],
                         ));
 
                         $encoder->write([
@@ -72,6 +74,8 @@ class Server
                             $params['microtime'],
                             "⏸ {$params['message']} — press ENTER to continue",
                             $params['caller'],
+                            $params['trace'],
+                            $params['rootDir'],
                         ));
 
                         self::$id++;
