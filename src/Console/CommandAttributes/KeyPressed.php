@@ -12,6 +12,7 @@ class KeyPressed
 {
     public function __construct(
         public readonly KeyCode|string $key,
+        public readonly ?int $keyModifiers = null,
         public readonly bool $global = false,
     ) {}
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tapper\Console\Components;
 
 use PhpTui\Term\KeyCode;
+use PhpTui\Term\KeyModifiers;
 use PhpTui\Term\MouseEventKind;
 use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Extension\Core\Widget\CompositeWidget;
@@ -82,14 +83,14 @@ class LogList extends Component
         $this->scroll->scrollDown($this->count, $this->visible);
     }
 
-    #[KeyPressed('u')]
+    #[KeyPressed('u', KeyModifiers::CONTROL)]
     public function pageUp(): void
     {
         $halfPage = (int) floor($this->visible / 2);
         $this->scroll->jump($this->appState->cursor - $halfPage, $this->count, $this->visible);
     }
 
-    #[KeyPressed('d')]
+    #[KeyPressed('d', KeyModifiers::CONTROL)]
     public function pageDown(): void
     {
         $halfPage = (int) floor($this->visible / 2);

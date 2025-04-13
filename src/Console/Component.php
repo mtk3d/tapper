@@ -62,9 +62,18 @@ abstract class Component
                 $eventBus->listen(
                     $attribute->key,
                     function (array $data) use ($attribute, $methodName) {
-                        if ($this->isActive || $attribute->global) {
-                            $this->$methodName($data);
+                        if ($attribute instanceof KeyPressed
+                            && $attribute?->keyModifiers !== null
+                            && $attribute?->keyModifiers !== $data['modifiers']
+                        ) {
+                            return;
                         }
+
+                        if (! $this->isActive && ! $attribute->global) {
+                            return;
+                        }
+
+                        $this->$methodName($data);
                     }
                 );
             }
