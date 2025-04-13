@@ -11,5 +11,6 @@ class Periodic
 {
     public function __construct(
         public readonly float $interval,
+        public readonly bool $global = false,
     ) {}
 }

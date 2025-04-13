@@ -10,6 +10,7 @@ use PhpTui\Tui\Layout\Constraint;
 use PhpTui\Tui\Layout\Layout;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
+use React\EventLoop\Loop;
 use Tapper\Console\Component;
 use Tapper\Console\Components\Details;
 use Tapper\Console\Components\Header;
@@ -35,13 +36,15 @@ class Main extends Component
         $this->componentInstances[LogList::class]->activate();
 
         $this->appState->observe('previewLog', function (?LogItem $log) {
-            if ($log) {
-                $this->componentInstances[Details::class]->activate();
-                $this->componentInstances[LogList::class]->deactivate();
-            } else {
-                $this->componentInstances[Details::class]->deactivate();
-                $this->componentInstances[LogList::class]->activate();
-            }
+            Loop::futureTick(function () use ($log) {
+                if ($log) {
+                    $this->componentInstances[Details::class]->activate();
+                    $this->componentInstances[LogList::class]->deactivate();
+                } else {
+                    $this->componentInstances[Details::class]->deactivate();
+                    $this->componentInstances[LogList::class]->activate();
+                }
+            });
         });
     }
 

@@ -35,7 +35,7 @@ class Navigation extends Component
 
         if ($this->appState->previewLog) {
             $instruction[] = Span::styled('Back: ', $descStyle);
-            $instruction[] = Span::styled('esc', $buttonStyle);
+            $instruction[] = Span::styled('backspace', $buttonStyle);
             $instruction[] = $delimiter;
         } else {
             $instruction[] = Span::styled('Details: ', $descStyle);

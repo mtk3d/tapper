@@ -33,6 +33,7 @@ class Details extends Component
     public function close(): void
     {
         $this->appState->previewLog = null;
+        $this->appState->detailsOffset = 0;
     }
 
     #[KeyPressed(KeyCode::Up)]
