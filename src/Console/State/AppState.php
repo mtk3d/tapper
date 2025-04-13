@@ -17,6 +17,8 @@ use RuntimeException;
  * @property int $unread
  * @property ?LogItem $previewLog
  * @property array $logs
+ * @property int $detailsCursor
+ * @property int $detailsOffset
  */
 class AppState
 {
@@ -42,6 +44,8 @@ class AppState
         private int $unread = 0,
         private ?LogItem $previewLog = null,
         private array $logs = [],
+        private int $detailsCursor = 0,
+        private int $detailsOffset = 0,
     ) {}
 
     /**
