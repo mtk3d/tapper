@@ -9,8 +9,13 @@ use PhpTui\Term\KeyCode;
 use PhpTui\Term\KeyModifiers;
 use PhpTui\Term\MouseEventKind;
 use PhpTui\Tui\Display\Area;
+use PhpTui\Tui\Extension\Core\Widget\CompositeWidget;
 use PhpTui\Tui\Extension\Core\Widget\List\ListItem;
 use PhpTui\Tui\Extension\Core\Widget\ListWidget;
+use PhpTui\Tui\Extension\Core\Widget\Scrollbar\ScrollbarOrientation;
+use PhpTui\Tui\Extension\Core\Widget\Scrollbar\ScrollbarState;
+use PhpTui\Tui\Extension\Core\Widget\Scrollbar\ScrollbarSymbols;
+use PhpTui\Tui\Extension\Core\Widget\ScrollbarWidget;
 use PhpTui\Tui\Text\Line;
 use PhpTui\Tui\Text\Text;
 use PhpTui\Tui\Widget\Widget;
@@ -55,13 +60,7 @@ class Details extends Component
     {
         $halfPage = (int) floor($this->area->height / 2);
 
-        if ($this->appState->detailsOffset < $halfPage) {
-            $this->appState->detailsOffset = 0;
-
-            return;
-        }
-
-        $this->appState->detailsOffset -= $halfPage;
+        $this->appState->detailsOffset = max(0, $this->appState->detailsOffset - $halfPage);
     }
 
     #[KeyPressed('d', KeyModifiers::CONTROL)]
@@ -69,11 +68,10 @@ class Details extends Component
     {
         $halfPage = (int) floor($this->area->height / 2);
 
-        $this->appState->detailsOffset += $halfPage;
-
-        if ($this->appState->detailsOffset > $this->count - $this->area->height - 1) {
-            $this->appState->detailsOffset = $this->count - $this->area->height;
-        }
+        $this->appState->detailsOffset = min(
+            $this->count - $this->area->height,
+            $this->appState->detailsOffset + $halfPage,
+        );
     }
 
     protected function view(Area $area): Widget
@@ -101,8 +99,16 @@ class Details extends Component
 
         $this->count = count($allItems);
 
-        return ListWidget::default()
-            ->items(...$allItems)
-            ->offset($this->appState->detailsOffset);
+        return CompositeWidget::fromWidgets(
+            ListWidget::default()
+                ->items(...$allItems)
+                ->offset($this->appState->detailsOffset),
+            ScrollbarWidget::default()
+                ->state(new ScrollbarState(max(0, $this->count - $this->area->height), $this->appState->detailsOffset, 1))
+                ->orientation(ScrollbarOrientation::VerticalRight)
+                ->symbols(new ScrollbarSymbols('│', '█', '', ''))
+                ->endSymbol(null)
+                ->beginSymbol(null),
+        );
     }
 }
