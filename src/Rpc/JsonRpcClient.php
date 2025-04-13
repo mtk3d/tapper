@@ -25,7 +25,7 @@ class JsonRpcClient
 
         fwrite($socket, json_encode($payload)."\n");
 
-        stream_set_timeout($socket, $this->pauseTimeout);
+        stream_set_timeout($socket, (int) $this->pauseTimeout);
         $response = fgets($socket);
 
         fclose($socket);

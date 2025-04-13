@@ -21,7 +21,6 @@ use React\Stream\ReadableResourceStream;
 use Tapper\Console\State\AppState;
 use Tapper\Console\Windows\Main;
 use Tapper\Console\Windows\Popup;
-use Tapper\Console\Windows\Window;
 use Tapper\Server;
 
 class Application
@@ -30,7 +29,7 @@ class Application
 
     const float RENDER_RATE = 1 / 60;
 
-    private Window $window;
+    private Component $window;
 
     private Popup $popup;
 
