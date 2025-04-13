@@ -173,7 +173,7 @@ class Application
         }
     }
 
-    private function close(): void
+    public function close(): void
     {
         $this->loop->stop();
         $this->terminal->disableRawMode();
