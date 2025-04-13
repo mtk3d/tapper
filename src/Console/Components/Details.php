@@ -85,7 +85,7 @@ class Details extends Component
                 $item['line'],
             );
 
-            return ListItem::fromString($file)->style(Style::default()->bold()->darkGray());
+            return ListItem::fromString($file)->style(Style::default()->darkGray());
         }, $trace);
 
         return [
