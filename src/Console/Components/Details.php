@@ -1,6 +1,8 @@
 <?php
 
-namespace Tapper\Console\Panes;
+declare(strict_types=1);
+
+namespace Tapper\Console\Components;
 
 use DateTime;
 use PhpTui\Term\KeyCode;

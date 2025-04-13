@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tapper\Console;
 
 use DI\Container;
@@ -17,6 +19,10 @@ use Tapper\Console\State\AppState;
 
 abstract class Component
 {
+    const string BEFORE_INIT = 'beforeInit';
+
+    const string AFTER_INIT = 'afterInit';
+
     protected array $components = [];
 
     protected array $componentInstances = [];
@@ -36,8 +42,8 @@ abstract class Component
         protected readonly Container $container,
         protected readonly AppState $appState,
     ) {
-        if (method_exists($this, 'init')) {
-            $this->container->call([$this, 'init']);
+        if (method_exists($this, self::BEFORE_INIT)) {
+            $this->container->call([$this, self::BEFORE_INIT]);
         }
 
         $reflection = new ReflectionObject($this);
@@ -80,8 +86,8 @@ abstract class Component
 
         $this->registerComponents();
 
-        if (method_exists($this, 'mount')) {
-            $this->container->call([$this, 'mount']);
+        if (method_exists($this, self::AFTER_INIT)) {
+            $this->container->call([$this, self::AFTER_INIT]);
         }
     }
 

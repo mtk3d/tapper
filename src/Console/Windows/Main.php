@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tapper\Console\Windows;
 
 use PhpTui\Tui\Display\Area;
@@ -9,11 +11,11 @@ use PhpTui\Tui\Layout\Layout;
 use PhpTui\Tui\Widget\Direction;
 use PhpTui\Tui\Widget\Widget;
 use Tapper\Console\Component;
-use Tapper\Console\Panes\Details;
-use Tapper\Console\Panes\Header;
-use Tapper\Console\Panes\LogList;
-use Tapper\Console\Panes\Navigation;
-use Tapper\Console\Panes\Splash;
+use Tapper\Console\Components\Details;
+use Tapper\Console\Components\Header;
+use Tapper\Console\Components\LogList;
+use Tapper\Console\Components\Navigation;
+use Tapper\Console\Components\Splash;
 use Tapper\Console\State\LogItem;
 
 class Main extends Component
@@ -28,7 +30,7 @@ class Main extends Component
 
     private ?Component $mainPane = null;
 
-    public function mount(): void
+    public function afterInit(): void
     {
         $this->componentInstances[LogList::class]->activate();
 

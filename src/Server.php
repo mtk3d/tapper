@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tapper;
 
 use Clue\React\NDJson\Decoder;

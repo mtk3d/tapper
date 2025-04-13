@@ -1,6 +1,8 @@
 <?php
 
-namespace Tapper\Console\Panes;
+declare(strict_types=1);
+
+namespace Tapper\Console\Components;
 
 use PhpTui\Term\KeyCode;
 use PhpTui\Term\MouseEventKind;
@@ -19,7 +21,6 @@ use Tapper\Console\CommandAttributes\KeyPressed;
 use Tapper\Console\CommandAttributes\Mouse;
 use Tapper\Console\CommandAttributes\OnEvent;
 use Tapper\Console\Component;
-use Tapper\Console\Components\LogItem;
 use Tapper\Console\Support\Scroll;
 
 class LogList extends Component

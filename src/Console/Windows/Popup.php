@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tapper\Console\Windows;
 
 use PhpTui\Tui\Display\Area;

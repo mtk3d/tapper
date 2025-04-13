@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Tapper\Console\Panes;
+namespace Tapper\Console\Components;
 
 use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Extension\Core\Widget\BlockWidget;

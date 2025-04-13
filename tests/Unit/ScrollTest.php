@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Tapper\Console\State\AppState;
 use Tapper\Console\Support\Scroll;
 
