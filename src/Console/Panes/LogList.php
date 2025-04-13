@@ -43,19 +43,6 @@ class LogList extends Component
         $this->appState->observe('live', fn ($live): bool => $live && $this->appState->unread = 0);
     }
 
-    private function updateLogs(): void
-    {
-        if (! $this->appState->live) {
-            $this->appState->unread++;
-        }
-
-        $this->count = count($this->appState->logs());
-
-        if ($this->appState->live) {
-            $this->scroll->scrollToBottom($this->count, $this->visible);
-        }
-    }
-
     #[OnEvent('resize')]
     #[FirstRender()]
     public function updateVisible(): void
@@ -66,31 +53,6 @@ class LogList extends Component
 
         $this->ensureVisible();
         $this->backToLive();
-    }
-
-    private function ensureVisible(): void
-    {
-        $visible = $this->visible;
-        $existing = count($this->listItems);
-
-        if ($visible > $existing) {
-            for ($i = $existing; $i < $visible; $i++) {
-                $this->listItems[] = $this->container->make(LogItem::class);
-            }
-        }
-
-        if ($visible < $existing) {
-            $this->listItems = array_slice($this->listItems, 0, $visible);
-        }
-    }
-
-    private function fill(): void
-    {
-        foreach ($this->listItems as $i => $component) {
-            $logIndex = $this->appState->offset + $i;
-            $log = $this->appState->logs()[$logIndex] ?? null;
-            $component->setData($log);
-        }
     }
 
     #[KeyPressed(KeyCode::Up)]
@@ -129,6 +91,44 @@ class LogList extends Component
     public function backToLive(): void
     {
         $this->scroll->scrollToBottom($this->count, $this->visible);
+    }
+
+    private function updateLogs(): void
+    {
+        if (! $this->appState->live) {
+            $this->appState->unread++;
+        }
+
+        $this->count = count($this->appState->logs());
+
+        if ($this->appState->live) {
+            $this->scroll->scrollToBottom($this->count, $this->visible);
+        }
+    }
+
+    private function ensureVisible(): void
+    {
+        $visible = $this->visible;
+        $existing = count($this->listItems);
+
+        if ($visible > $existing) {
+            for ($i = $existing; $i < $visible; $i++) {
+                $this->listItems[] = $this->container->make(LogItem::class);
+            }
+        }
+
+        if ($visible < $existing) {
+            $this->listItems = array_slice($this->listItems, 0, $visible);
+        }
+    }
+
+    private function fill(): void
+    {
+        foreach ($this->listItems as $i => $component) {
+            $logIndex = $this->appState->offset + $i;
+            $log = $this->appState->logs()[$logIndex] ?? null;
+            $component->setData($log);
+        }
     }
 
     protected function view(Area $area): Widget
