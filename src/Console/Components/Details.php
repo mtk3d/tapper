@@ -76,7 +76,27 @@ class Details extends Component
         );
     }
 
-    private function parseStackTrace(string $rootDir, array $trace): array
+    private function parseCode(array $code): array
+    {
+        return array_map(function ($line) {
+            $style = Style::default()->darkGray();
+
+            if ($line['active']) {
+                $style = $style->lightGreen();
+            }
+
+            $codeLine = sprintf(
+                ' %s %s│ %s',
+                $line['number'],
+                $line['active'] ? '➔' : ' ',
+                $line['line'],
+            );
+
+            return ListItem::fromString($codeLine)->style($style);
+        }, $code);
+    }
+
+    private function parseStackTrace(string $rootDir, array $trace, array $code): array
     {
         $stack = array_map(function ($item) use ($rootDir) {
             $file = sprintf(
@@ -88,8 +108,12 @@ class Details extends Component
             return ListItem::fromString($file)->style(Style::default()->darkGray());
         }, $trace);
 
+        $stack[0]->style(Style::default()->yellow());
+
         return [
-            ListItem::fromString('──────────────────── Backtrace ────────────────────'),
+            ListItem::fromString('──────────────────── Context ────────────────────'),
+            ListItem::fromString(''),
+            ...$this->parseCode($code),
             ListItem::fromString(''),
             ...$stack,
         ];
@@ -113,14 +137,11 @@ class Details extends Component
         $formattedMessage = MessageFormatter::colorizeFormattedJson($log->message);
         $formattedListItems = array_map(fn ($line) => ListItem::new(Text::fromLine($line)), $formattedMessage);
 
-        $stackTrace = $this->parseStackTrace($log->rootDir, $log->trace);
-        $stackTrace[2]->style(Style::default()->yellow());
-
         $allItems = [
             ...$infoListItems,
             ...$formattedListItems,
             ListItem::fromString(''),
-            ...$stackTrace,
+            ...$this->parseStackTrace($log->rootDir, $log->trace, $log->code),
         ];
 
         $this->count = count($allItems);

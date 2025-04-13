@@ -13,5 +13,6 @@ class LogItem
         public string $caller,
         public array $trace,
         public string $rootDir,
+        public array $code,
     ) {}
 }

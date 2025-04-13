@@ -57,6 +57,7 @@ class Server
                             $params['caller'],
                             $params['trace'],
                             $params['rootDir'],
+                            $params['code'],
                         ));
 
                         $encoder->write([
@@ -76,6 +77,7 @@ class Server
                             $params['caller'],
                             $params['trace'],
                             $params['rootDir'],
+                            $params['code'],
                         ));
 
                         self::$id++;
