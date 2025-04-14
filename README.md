@@ -1,5 +1,5 @@
 <p align="center">
-    <img src="assets/tapper-logo.webp" width="120" alt="Tapper">
+    <img src="assets/logo.webp" width="120" alt="Tapper">
 </p>
 
 ![Status](https://img.shields.io/badge/status-in%20development-yellow)
@@ -26,7 +26,7 @@ foreach (range(1, 3) as $i) {
 
 👇👇👇👇👇👇👇👇👇👇👇
 
-![Tapper presentation](assets/presentation.webp)
+![Tapper demo animation](assets/demo.webp)
 
 ## 🚧 Project Status
 
