@@ -1,0 +1,168 @@
+{
+    "openrpc": "1.2.6",
+    "info": {
+        "title": "Tapper API",
+        "version": "1.0.0",
+        "license": {
+            "name": "MIT"
+        }
+    },
+    "methods": [
+        {
+            "name": "appendLog",
+            "params": [
+                {
+                    "name": "message",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "microtime",
+                    "required": true,
+                    "schema": {
+                        "type": "number",
+                        "minimum": 0
+                    }
+                },
+                {
+                    "name": "details",
+                    "required": true,
+                    "schema": {
+                        "$ref": "#/components/schemas/LogDetails"
+                    }
+                }
+            ],
+            "result": {
+                "name": "appendLogResult",
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "result": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "errors": [
+                {
+                    "code": -32601,
+                    "message": "Method '{method}' not found"
+                }
+            ],
+            "examples": [
+                {
+                    "name": "appendLogExample",
+                    "description": "Append Log Example",
+                    "params": [
+                        {
+                            "name": "message",
+                            "value": "Example log message"
+                        },
+                        {
+                            "name": "microtime",
+                            "value": 1713878432.123456
+                        },
+                        {
+                            "name": "details",
+                            "value": {
+                                "trace": [
+                                    {
+                                        "file": "/examples/BasicExample.php",
+                                        "line": 19
+                                    }
+                                ],
+                                "rootDir": "/Users/username/tapper",
+                                "code": [
+                                    {
+                                        "number": 18,
+                                        "line": "usleep(500000);"
+                                    },
+                                    {
+                                        "number": 19,
+                                        "line": "tp('Example log message')"
+                                    },
+                                    {
+                                        "number": 20,
+                                        "line": ""
+                                    }
+                                ]
+                            }
+                        }
+                    ],
+                    "result": {
+                        "name": "appendLogExample",
+                        "value": [
+                            {
+                                "result": "success"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ],
+    "components": {
+        "schemas": {
+            "TraceEntry": {
+                "type": "object",
+                "required": [
+                    "file",
+                    "line"
+                ],
+                "properties": {
+                    "file": {
+                        "type": "string"
+                    },
+                    "line": {
+                        "type": "number",
+                        "minimum": 0
+                    }
+                }
+            },
+            "TraceEntries": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/TraceEntry"
+                }
+            },
+            "CodeLine": {
+                "type": "object",
+                "required": [
+                    "number",
+                    "line"
+                ],
+                "properties": {
+                    "number": {
+                        "type": "number",
+                        "minumum": 0
+                    },
+                    "line": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Code": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/components/schemas/CodeLine"
+                }
+            },
+            "LogDetails": {
+                "type": "object",
+                "properties": {
+                    "trace": {
+                        "$ref": "#/components/schemas/TraceEntries"
+                    },
+                    "rootDir": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "$ref": "#/components/schemas/Code"
+                    }
+                }
+            }
+        }
+    }
+}
