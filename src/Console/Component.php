@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tapper\Console;
 
 use DI\Container;
+use PhpTui\Term\MouseEventKind;
 use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Widget\Widget;
 use React\EventLoop\LoopInterface;
@@ -65,6 +66,20 @@ abstract class Component
                         if ($attribute instanceof KeyPressed
                             && $attribute?->keyModifiers !== null
                             && $attribute?->keyModifiers !== $data['modifiers']
+                        ) {
+                            return;
+                        }
+
+                        $scrolls = [
+                            MouseEventKind::ScrollDown,
+                            MouseEventKind::ScrollLeft,
+                            MouseEventKind::ScrollRight,
+                            MouseEventKind::ScrollUp,
+                        ];
+
+                        if ($attribute instanceof Mouse
+                            && ! in_array($attribute->key, $scrolls)
+                            && $attribute->button !== $data['event']->button
                         ) {
                             return;
                         }

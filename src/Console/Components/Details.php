@@ -7,6 +7,7 @@ namespace Tapper\Console\Components;
 use DateTime;
 use PhpTui\Term\KeyCode;
 use PhpTui\Term\KeyModifiers;
+use PhpTui\Term\MouseButton;
 use PhpTui\Term\MouseEventKind;
 use PhpTui\Tui\Display\Area;
 use PhpTui\Tui\Extension\Core\Widget\CompositeWidget;
@@ -31,6 +32,7 @@ class Details extends Component
 
     #[KeyPressed(KeyCode::Backspace)]
     #[KeyPressed(KeyCode::Esc)]
+    #[Mouse(MouseEventKind::Down, MouseButton::Right)]
     public function close(): void
     {
         $this->appState->previewLog = null;
