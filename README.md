@@ -1,8 +1,11 @@
 <p align="center">
     <img src="assets/logo.webp" width="120" alt="Tapper">
-</p>
 
-![Status](https://img.shields.io/badge/status-in%20development-yellow)
+</p>
+<p align="center">
+    <a href="https://github.com/tapperphp/tapper/actions"><img alt="GitHub Actions Workflow Status" src="https://img.shields.io/github/actions/workflow/status/tapperphp/tapper/tests.yml?&style=for-the-badge&label=Tests&branch=master"></a>
+    <img alt="Development Statue" src="https://img.shields.io/badge/status-in%20development-yellow?style=for-the-badge">
+</p>
 
 ```PHP
 <?php
