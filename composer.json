@@ -35,5 +35,8 @@
     },
     "bin": [
         "bin/tapper"
-    ]
+    ],
+    "scripts": {
+        "test:unit": "pest"
+    }
 }
