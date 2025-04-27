@@ -1,0 +1,33 @@
+name: Static Analysis
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  static:
+    if: github.event_name != 'schedule' || github.repository == 'tapperphp/tapper'
+    name: Static Analysis
+
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        dependency-version: [prefer-lowest, prefer-stable]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          tools: composer:v2
+          coverage: none
+
+      - name: Install Dependencies
+        run: composer update --prefer-stable --no-interaction --no-progress --ansi
+
+      - name: Code Style
+        run: composer test:lint

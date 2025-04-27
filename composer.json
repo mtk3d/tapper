@@ -35,5 +35,9 @@
     },
     "bin": [
         "bin/tapper"
-    ]
+    ],
+    "scripts": {
+        "test:unit": "pest --compact",
+        "test:lint": "pint --test"
+    }
 }
